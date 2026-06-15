@@ -1,0 +1,134 @@
+/* ── HOME EXCLUSIVO ── */
+
+:root {
+  --blue:       #1565C0;
+  --blue-light: #E3F0FF;
+}
+
+.home-body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F3F4F6;
+}
+
+.home-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  padding: 40px 24px 32px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  animation: homeFadeIn .3s ease both;
+  background: #ffffff;
+  border-radius: 50px;
+}
+
+@keyframes homeFadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(.96); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);   }
+}
+
+/* LOGO */
+.home-logo img{
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+}
+
+/* MARCA */
+.home-brand {
+  font-size: clamp(32px, 10vw, 52px);
+  font-weight: 900;
+  color: var(--blue);
+  letter-spacing: 6px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.home-sub {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-sub, #9CA3AF);
+  letter-spacing: 3px;
+  margin-bottom: 32px;
+}
+
+/* BARRA PROGRESS */
+.home-progress {
+  width: 120px;
+  height: 2px;
+  background: #E5E7EB;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 48px;
+}
+
+.home-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--blue);
+  border-radius: 2px;
+  animation: progressFill 1.2s ease .3s forwards;
+}
+
+@keyframes progressFill {
+  to { width: 100%; }
+}
+
+/* BOTONES */
+.home-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 48px;
+}
+
+.home-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: var(--font, system-ui);
+  text-decoration: none;
+  transition: transform .15s, box-shadow .15s, background .15s;
+  cursor: pointer;
+}
+.home-btn:hover  { transform: translateY(-2px); }
+.home-btn:active { transform: translateY(0); }
+
+.home-btn--primary {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(21,101,192,.28);
+}
+.home-btn--primary:hover {
+  background: #1976D2;
+  box-shadow: 0 6px 20px rgba(21,101,192,.38);
+}
+
+.home-btn--outline {
+  background: transparent;
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+}
+.home-btn--outline:hover {
+  background: var(--blue-light);
+}
+
+/* PIE */
+.home-footer {
+  font-size: 10px;
+  color: var(--text-sub, #000000);
+  letter-spacing: .5px;
+  font-weight: bold;
+}
