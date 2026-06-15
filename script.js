@@ -52,16 +52,49 @@ async function cargarEnsayos(organizacion_id) {
   poblarDisciplinas(data);
 }
 
-// ── AGRUPAR ENSAYOS POR DISCIPLINA ──
-// Agrupa por palabra clave en el nombre del ensayo
+// ── MAPA EXACTO: ensayo → disciplina ──
+const DISCIPLINA_MAP = {
+  // Suelos
+  'CBR':                      'Suelos',
+  'Consolidación':            'Suelos',
+  'Contenido de humedad':     'Suelos',
+  'Corte directo':            'Suelos',
+  'Granulometría':            'Suelos',
+  'Gravedad específica':      'Suelos',
+  'Límites de Atterberg':     'Suelos',
+  'Permeabilidad':            'Suelos',
+  'Proctor estándar':         'Suelos',
+  'Proctor modificado':       'Suelos',
+  'Resistencia no drenada':   'Suelos',
+  'Triaxial':                 'Suelos',
+  // Concreto
+  'Contenido de aire':        'Concreto',
+  'Densidad del concreto':    'Concreto',
+  'Resistencia a la compresión': 'Concreto',
+  'Slump (asentamiento)':     'Concreto',
+  'Temperatura del concreto': 'Concreto',
+  // Roca
+  'Compresión uniaxial':      'Roca',
+  'Durabilidad':              'Roca',
+  'Point load':               'Roca',
+  'Tracción indirecta (brasileño)': 'Roca',
+  // Agregados
+  'Abrasión Los Ángeles':     'Agregados',
+  'Granulometría (Agregados)':'Agregados',
+  'Gravedad específica fino': 'Agregados',
+  'Gravedad específica grueso':'Agregados',
+  'Impurezas orgánicas':      'Agregados',
+  // Químicos
+  'Calidad del agua':         'Quimicos',
+  'Cloruros':                 'Quimicos',
+  'Materia orgánica':         'Quimicos',
+  'pH del suelo/agua':        'Quimicos',
+  'Sales solubles totales':   'Quimicos',
+  'Sulfatos solubles':        'Quimicos',
+};
+
 function inferirDisciplina(nombre) {
-  const n = nombre.toLowerCase();
-  if (n.includes('concreto') || n.includes('slump') || n.includes('compresión') || n.includes('tracción') || n.includes('rotura') || n.includes('aire')) return 'Concreto';
-  if (n.includes('roca') || n.includes('puntual') || n.includes('desmoronamiento') || n.includes('uniaxial')) return 'Roca';
-  if (n.includes('ph') || n.includes('sulfato') || n.includes('cloruro') || n.includes('orgánica') || n.includes('quím')) return 'Quimicos';
-  if (n.includes('agregado') || n.includes('granulometría de ag') || n.includes('abrasión') || n.includes('peso unitario') || n.includes('equivalente') || n.includes('absorción')) return 'Agregados';
-  // Todo lo demás: Suelos
-  return 'Suelos';
+  return DISCIPLINA_MAP[nombre] || 'Otros';
 }
 
 function poblarDisciplinas(ensayos) {
