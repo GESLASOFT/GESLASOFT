@@ -308,8 +308,10 @@ async function enviarSolicitud() {
       body: JSON.stringify(solicitudPayload),
     });
 
-    const [solicitud] = await resSol.json();
-    if (!resSol.ok) throw new Error(solicitud?.message || 'Error al crear la solicitud');
+
+    const respSol = await resSol.json();
+    if (!resSol.ok) throw new Error(respSol?.message || JSON.stringify(respSol));
+    const solicitud = Array.isArray(respSol) ? respSol[0] : respSol;
 
     const solicitud_id = solicitud.id;
 
