@@ -120,17 +120,19 @@ select:disabled {
 }
 
 .lab-card-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 100px;
+  min-height: 64px;
+  align-self: stretch;
+  border-radius: 6px;
   background: var(--accent-light);
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--accent);
   flex-shrink: 0;
+  overflow: hidden;
+  margin: -10px 4px -6px -12px; /* anula el padding del padre */
 }
-
 .lab-card-info { flex: 1; }
 
 .lab-card-name {
@@ -233,4 +235,56 @@ select:disabled {
 .btn-cotizar:hover {
   background: var(--accent-mid);
   box-shadow: 0 4px 10px rgba(0,137,123,.3);
+}
+
+
+
+
+.tabs-acreditacion {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text-mid);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.tab-btn--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.lab-badge-no-acreditado {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #9CA3AF;
+  background: #F3F4F6;
+  border: 1px solid #E5E7EB;
+  border-radius: 20px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.lab-card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
 }

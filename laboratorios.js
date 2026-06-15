@@ -5,6 +5,7 @@ const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // ── ESTADO ──
 let todosLosLabs = [];
 let filtroMetodo = '';
+let filtroAcreditacion = 'todos';
 
 // ── DOM ──
 const selDep     = document.getElementById('filDepartamento');
@@ -17,6 +18,16 @@ const cargando   = document.getElementById('estadoCargando');
 const vacio      = document.getElementById('estadoVacio');
 const resHeader  = document.getElementById('resultadosHeader');
 const resCount   = document.getElementById('resultadosCount');
+
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+    btn.classList.add('tab-btn--active');
+    filtroAcreditacion = btn.dataset.filtro;
+    aplicarFiltros();
+  });
+});
 
 // ── FETCH SUPABASE ──
 async function fetchLabs() {
@@ -134,8 +145,10 @@ btnLimpiar.addEventListener('click', () => {
   inputMet.value   = '';
   filtroMetodo     = '';
   aplicarFiltros();
+  filtroAcreditacion = 'todos';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+  document.querySelector('.tab-btn[data-filtro="todos"]').classList.add('tab-btn--active');
 });
-
 // ── APLICAR FILTROS ──
 function aplicarFiltros() {
   const dep  = selDep.value;
@@ -153,6 +166,13 @@ function aplicarFiltros() {
       const metodos = l.metodos_acreditados || [];
       return metodos.some(m => m.toLowerCase().includes(filtroMetodo));
     });
+  }
+
+  if (filtroAcreditacion === 'acreditados') {
+    resultado = resultado.filter(l => l.acreditado === true);
+  }
+  if (filtroAcreditacion === 'no_acreditados') {
+    resultado = resultado.filter(l => l.acreditado === false);
   }
 
   renderCards(resultado);
@@ -198,14 +218,19 @@ function crearCard(lab, idx) {
   card.innerHTML = `
     <div class="lab-card-header">
       <div class="lab-card-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4
-                   M9 3v18m0 0h10a2 2 0 0 0 2-2v-4
-                   M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
-        </svg>
+        ${lab.logo_url
+          ? `<img src="${lab.logo_url}" alt="${lab.nombre}" />`
+          : `<svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4
+                      M9 3v18m0 0h10a2 2 0 0 0 2-2v-4
+                      M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+            </svg>`
+        }
       </div>
+
+
       <div class="lab-card-info">
         <div class="lab-card-name">${lab.nombre}</div>
         <div class="lab-card-location">
@@ -219,7 +244,9 @@ function crearCard(lab, idx) {
         </div>
         ${lab.direccion ? `<div class="lab-card-location" style="margin-top:2px">${lab.direccion}</div>` : ''}
       </div>
-      ${lab.acreditado ? '<span class="lab-badge-acreditado">✓ ACREDITADO</span>' : ''}
+      ${lab.acreditado 
+        ? '<span class="lab-badge-acreditado">✓ ACREDITADO</span>' 
+        : '<span class="lab-badge-no-acreditado">✗ NO ACREDITADO</span>'}
     </div>
 
     ${metodos.length > 0 ? `
@@ -233,17 +260,27 @@ function crearCard(lab, idx) {
       <div class="lab-metodos-chips">${chipsHtml}</div>
     </div>`}
 
+    ${lab.geslasoft_activo ? `
     <div class="lab-card-footer">
-      <a href="formularios.html" class="btn-cotizar">
+      <a href="formulario.html" class="btn-cotizar">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
+            stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
           <line x1="22" y1="2" x2="11" y2="13"/>
           <polygon points="22 2 15 22 11 13 2 9 22 2"/>
         </svg>
         Solicitar cotización
       </a>
-    </div>
+    </div>` : ''}
+        
+
+
+
+
+
+
+
+
   `;
 
   return card;
