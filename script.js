@@ -1,75 +1,81 @@
-// ── DATOS DE ENSAYOS POR DISCIPLINA ──
-const ensayosPorDisciplina = {
-  EnsayosEstandaresSuelos: {
-    'Contenido de humedad':           'ASTM D2216',
-    'Límites de Atterberg':           'ASTM D4318',
-    'Análisis granulométrico':        'ASTM D422',
-    'Clasificación SUCS':             'ASTM D2487',
-    'Proctor modificado':             'ASTM D1557',
-    'CBR de laboratorio':             'ASTM D1883',
-    'Corte directo':                  'ASTM D3080',
-    'Consolidación':                  'ASTM D2435',
-  },
-  Concreto: {
-    'Resistencia a compresión':       'ASTM C39',
-    'Asentamiento (Slump)':           'ASTM C143',
-    'Contenido de aire':              'ASTM C231',
-    'Temperatura del concreto':       'ASTM C1064',
-    'Resistencia a tracción':         'ASTM C496',
-    'Módulo de rotura':               'ASTM C78',
-  },
-  Roca: {
-    'Resistencia a compresión uniaxial': 'ASTM D7012',
-    'Índice de carga puntual':        'ASTM D5731',
-    'Durabilidad al desmoronamiento': 'ASTM D4644',
-    'Densidad y porosidad':           'ASTM D7263',
-  },
-  Quimicos: {
-    'pH de suelo':                    'ASTM D4972',
-    'Contenido de sulfatos':          'ASTM D516',
-    'Contenido de cloruros':          'ASTM D512',
-    'Materia orgánica':               'ASTM D2974',
-  },
-  EnsayosEspecialesSuelos: {
-    'Permeabilidad (carga variable)': 'ASTM D5084',
-    'Permeabilidad (carga constante)':'ASTM D2434',
-    'Ensayo de cono (CPT)':           'ASTM D3441',
-    'Compresión triaxial (CU)':       'ASTM D4767',
-  },
-  Agregados: {
-    'Granulometría de agregados':     'ASTM C136',
-    'Abrasión Los Ángeles':           'ASTM C131',
-    'Peso unitario':                  'ASTM C29',
-    'Equivalente de arena':           'ASTM D2419',
-    'Absorción y gravedad específica':'ASTM C127',
-  },
-};
+// ── CONFIGURACIÓN SUPABASE ──
+const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
 
-// ── ICONOS POR DISCIPLINA ──
+// ── ICONOS POR DISCIPLINA (para agrupar visualmente) ──
 const iconoDisc = {
-  EnsayosEstandaresSuelos:    '🪨',
+  Suelos:    '🪨',
   Concreto:  '🏗️',
   Roca:      '⛰️',
   Quimicos:  '🧪',
-  EnsayosEspecialesSuelos: '💧',
   Agregados: '🔩',
+  Otros:     '🔬',
 };
 
 // ── ESTADO LOCAL ──
-let items = []; // { disciplina, ensayo, norma, cantidad }
+let items          = [];  // { area_disciplina, ensayo_nombre, norma, cantidad }
+let ensayosDelLab  = [];  // cargados desde Supabase
+let labActual      = null; // objeto guardado en localStorage
 
-// ── REFERENCIAS DOM ──
-const disciplinaSelect  = document.getElementById('disciplina');
-const ensayosLista      = document.getElementById('ensayosLista');
-const btnAgregarWrap    = document.getElementById('btnAgregarWrap');
-const btnAgregar        = document.getElementById('btnAgregar');
-const cardItems         = document.getElementById('cardItems');
-const cardItemsTitle    = document.getElementById('cardItemsTitle');
-const itemsContainer    = document.getElementById('itemsContainer');
-const solicitudForm     = document.getElementById('solicitudForm');
-const modalOverlay      = document.getElementById('modalOverlay');
-const btnModalAceptar   = document.getElementById('btnModalAceptar');
-const btnBorrador       = document.getElementById('btnBorrador');
+// ── DOM ──
+const disciplinaSelect = document.getElementById('disciplina');
+const ensayosLista     = document.getElementById('ensayosLista');
+const btnAgregarWrap   = document.getElementById('btnAgregarWrap');
+const btnAgregar       = document.getElementById('btnAgregar');
+const cardItems        = document.getElementById('cardItems');
+const cardItemsTitle   = document.getElementById('cardItemsTitle');
+const itemsContainer   = document.getElementById('itemsContainer');
+const solicitudForm    = document.getElementById('solicitudForm');
+const modalOverlay     = document.getElementById('modalOverlay');
+const btnModalAceptar  = document.getElementById('btnModalAceptar');
+const btnBorrador      = document.getElementById('btnBorrador');
+
+// ── CARGAR ENSAYOS DESDE SUPABASE ──
+async function cargarEnsayos(organizacion_id) {
+  if (!organizacion_id) return;
+
+  const res = await fetch(
+    `${SUPABASE_URL}/rest/v1/precios_ensayo?organizacion_id=eq.${organizacion_id}&select=ensayo_nombre,norma&order=ensayo_nombre.asc`,
+    {
+      headers: {
+        'apikey':        SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Content-Type':  'application/json',
+      }
+    }
+  );
+  const data = await res.json();
+  if (!res.ok) { console.error('Error cargando ensayos:', data); return; }
+  ensayosDelLab = data;
+
+  // Poblar el select de disciplinas con los grupos disponibles
+  poblarDisciplinas(data);
+}
+
+// ── AGRUPAR ENSAYOS POR DISCIPLINA ──
+// Agrupa por palabra clave en el nombre del ensayo
+function inferirDisciplina(nombre) {
+  const n = nombre.toLowerCase();
+  if (n.includes('concreto') || n.includes('slump') || n.includes('compresión') || n.includes('tracción') || n.includes('rotura') || n.includes('aire')) return 'Concreto';
+  if (n.includes('roca') || n.includes('puntual') || n.includes('desmoronamiento') || n.includes('uniaxial')) return 'Roca';
+  if (n.includes('ph') || n.includes('sulfato') || n.includes('cloruro') || n.includes('orgánica') || n.includes('quím')) return 'Quimicos';
+  if (n.includes('agregado') || n.includes('granulometría de ag') || n.includes('abrasión') || n.includes('peso unitario') || n.includes('equivalente') || n.includes('absorción')) return 'Agregados';
+  // Todo lo demás: Suelos
+  return 'Suelos';
+}
+
+function poblarDisciplinas(ensayos) {
+  const disciplinas = [...new Set(ensayos.map(e => inferirDisciplina(e.ensayo_nombre)))].sort();
+
+  // Limpiar select y dejar solo la opción vacía
+  disciplinaSelect.innerHTML = '<option value="">Seleccionar disciplina</option>';
+  disciplinas.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = `${iconoDisc[d] || '🔬'} ${d}`;
+    disciplinaSelect.appendChild(opt);
+  });
+}
 
 // ── DISCIPLINA: CAMBIO ──
 disciplinaSelect.addEventListener('change', () => {
@@ -86,14 +92,15 @@ disciplinaSelect.addEventListener('change', () => {
 
 // ── RENDER LISTA DE ENSAYOS ──
 function renderEnsayosLista(disc) {
-  const ensayos = ensayosPorDisciplina[disc] || {};
+  const ensayosFiltrados = ensayosDelLab.filter(e => inferirDisciplina(e.ensayo_nombre) === disc);
   ensayosLista.innerHTML = '';
 
-  Object.entries(ensayos).forEach(([nombre, norma]) => {
+  ensayosFiltrados.forEach(({ ensayo_nombre, norma }) => {
     const row = document.createElement('div');
     row.className = 'ensayo-item';
-    row.dataset.ensayo = nombre;
-    row.dataset.norma  = norma;
+    row.dataset.ensayo = ensayo_nombre;
+    row.dataset.norma  = norma || '';
+    row.dataset.disc   = disc;
 
     row.innerHTML = `
       <div class="ensayo-checkbox">
@@ -102,8 +109,8 @@ function renderEnsayosLista(disc) {
         </svg>
       </div>
       <div class="ensayo-texts">
-        <div class="ensayo-name">${nombre}</div>
-        <div class="ensayo-norma">${norma}</div>
+        <div class="ensayo-name">${ensayo_nombre}</div>
+        <div class="ensayo-norma">${norma || ''}</div>
       </div>
     `;
 
@@ -114,20 +121,19 @@ function renderEnsayosLista(disc) {
 
 // ── AGREGAR SELECCIONADOS ──
 btnAgregar.addEventListener('click', () => {
-  const disc     = disciplinaSelect.value;
-  const checked  = ensayosLista.querySelectorAll('.ensayo-item.checked');
+  const checked = ensayosLista.querySelectorAll('.ensayo-item.checked');
   if (!checked.length) return;
 
   checked.forEach(row => {
     const ensayo = row.dataset.ensayo;
     const norma  = row.dataset.norma;
-    const existe = items.some(i => i.disciplina === disc && i.ensayo === ensayo);
+    const disc   = row.dataset.disc;
+    const existe = items.some(i => i.area_disciplina === disc && i.ensayo_nombre === ensayo);
     if (!existe) {
-      items.push({ disciplina: disc, ensayo, norma, cantidad: 1 });
+      items.push({ area_disciplina: disc, ensayo_nombre: ensayo, norma, cantidad: 1 });
     }
   });
 
-  // Reset selección
   ensayosLista.querySelectorAll('.ensayo-item').forEach(r => r.classList.remove('checked'));
   disciplinaSelect.value = '';
   ensayosLista.classList.add('hidden');
@@ -147,17 +153,15 @@ function renderItems() {
   cardItemsTitle.textContent = `Ensayos (${items.length})`;
   itemsContainer.innerHTML = '';
 
-  // Agrupar por disciplina
   const grupos = {};
   items.forEach((item, idx) => {
-    if (!grupos[item.disciplina]) grupos[item.disciplina] = [];
-    grupos[item.disciplina].push({ ...item, idx });
+    if (!grupos[item.area_disciplina]) grupos[item.area_disciplina] = [];
+    grupos[item.area_disciplina].push({ ...item, idx });
   });
 
   Object.entries(grupos).forEach(([disc, grupo]) => {
     const grupoDiv = document.createElement('div');
     grupoDiv.className = 'disciplina-grupo';
-
     grupoDiv.innerHTML = `
       <div class="disciplina-label">
         <span>${iconoDisc[disc] || '🔬'}</span>
@@ -165,11 +169,11 @@ function renderItems() {
       </div>
     `;
 
-    grupo.forEach(({ ensayo, cantidad, idx }) => {
+    grupo.forEach(({ ensayo_nombre, cantidad, idx }) => {
       const row = document.createElement('div');
       row.className = 'item-row';
       row.innerHTML = `
-        <span class="item-name">${ensayo}</span>
+        <span class="item-name">${ensayo_nombre}</span>
         <div class="cant-controls">
           <button type="button" class="cant-btn" data-action="dec" data-idx="${idx}">−</button>
           <span class="cant-value" id="cant-${idx}">${cantidad}</span>
@@ -187,7 +191,6 @@ function renderItems() {
     itemsContainer.appendChild(grupoDiv);
   });
 
-  // Eventos cantidad / eliminar
   itemsContainer.querySelectorAll('.cant-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const idx    = parseInt(btn.dataset.idx);
@@ -200,8 +203,7 @@ function renderItems() {
 
   itemsContainer.querySelectorAll('.item-delete').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx = parseInt(btn.dataset.idx);
-      items.splice(idx, 1);
+      items.splice(parseInt(btn.dataset.idx), 1);
       renderItems();
     });
   });
@@ -210,14 +212,11 @@ function renderItems() {
 // ── VALIDACIÓN ──
 function validarForm() {
   let ok = true;
-
-  const campos = [
+  [
     { id: 'empresa',  errorId: 'empresa-error'  },
     { id: 'nombre',   errorId: 'nombre-error'   },
     { id: 'telefono', errorId: 'telefono-error' },
-  ];
-
-  campos.forEach(({ id, errorId }) => {
+  ].forEach(({ id, errorId }) => {
     const input = document.getElementById(id);
     const error = document.getElementById(errorId);
     if (!input.value.trim()) {
@@ -229,11 +228,9 @@ function validarForm() {
       error.classList.remove('visible');
     }
   });
-
   return ok;
 }
 
-// Limpiar error al escribir
 ['empresa', 'nombre', 'telefono'].forEach(id => {
   document.getElementById(id).addEventListener('input', () => {
     document.getElementById(id).classList.remove('invalid');
@@ -241,15 +238,98 @@ function validarForm() {
   });
 });
 
-// ── ENVIAR ──
+// ── ENVIAR A SUPABASE ──
+async function enviarSolicitud() {
+  const btnEnviar = document.getElementById('btnEnviar');
+  btnEnviar.disabled = true;
+  btnEnviar.textContent = 'Enviando...';
+
+  try {
+    const organizacion_id = labActual?.organizacion_id;
+    if (!organizacion_id) throw new Error('No se identificó el laboratorio. Vuelve a seleccionarlo.');
+
+    // 1. Insertar en solicitudes
+    const solicitudPayload = {
+      organizacion_id,
+      empresa_solicitante:  document.getElementById('empresa').value.trim(),
+      ruc_dni:              document.getElementById('rucDni').value.trim()      || null,
+      direccion:            document.getElementById('direccion').value.trim()   || null,
+      nombre_solicitante:   document.getElementById('nombre').value.trim(),
+      cargo_solicitante:    document.getElementById('cargo').value.trim()       || null,
+      telefono:             document.getElementById('telefono').value.trim(),
+      email:                document.getElementById('email').value.trim()       || null,
+      observaciones:        document.getElementById('observaciones').value.trim() || null,
+      origen:               'portal_cliente',
+      estado:               'pendiente',
+      version:              1,
+    };
+
+    const resSol = await fetch(`${SUPABASE_URL}/rest/v1/solicitudes`, {
+      method: 'POST',
+      headers: {
+        'apikey':        SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation',
+      },
+      body: JSON.stringify(solicitudPayload),
+    });
+
+    const [solicitud] = await resSol.json();
+    if (!resSol.ok) throw new Error(solicitud?.message || 'Error al crear la solicitud');
+
+    const solicitud_id = solicitud.id;
+
+    // 2. Insertar items en solicitud_items
+    const itemsPayload = items.map(item => ({
+      organizacion_id,
+      solicitud_id,
+      area_disciplina: item.area_disciplina,
+      ensayo_nombre:   item.ensayo_nombre,
+      norma:           item.norma || '',
+      cantidad:        item.cantidad,
+    }));
+
+    const resItems = await fetch(`${SUPABASE_URL}/rest/v1/solicitud_items`, {
+      method: 'POST',
+      headers: {
+        'apikey':        SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+        'Content-Type':  'application/json',
+      },
+      body: JSON.stringify(itemsPayload),
+    });
+
+    if (!resItems.ok) {
+      const errItems = await resItems.json();
+      throw new Error(errItems?.message || 'Error al guardar los ensayos');
+    }
+
+    // 3. Mostrar modal de éxito con número de solicitud
+    document.querySelector('.modal-desc').innerHTML =
+      `Registrada correctamente con el número <strong>${solicitud.nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
+    modalOverlay.classList.remove('hidden');
+    localStorage.removeItem('geslasoft_borrador');
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast(err.message || 'Error al enviar. Intenta de nuevo.', 'danger');
+  } finally {
+    btnEnviar.disabled = false;
+    btnEnviar.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+      Enviar solicitud`;
+  }
+}
+
+// ── SUBMIT ──
 solicitudForm.addEventListener('submit', (e) => {
   e.preventDefault();
   if (!validarForm()) return;
-  if (items.length === 0) {
-    alert('Agregue al menos un ensayo.');
-    return;
-  }
-  modalOverlay.classList.remove('hidden');
+  if (items.length === 0) { mostrarToast('Agrega al menos un ensayo.', 'warning'); return; }
+  enviarSolicitud();
 });
 
 // ── MODAL ACEPTAR ──
@@ -280,33 +360,45 @@ btnBorrador.addEventListener('click', () => {
   mostrarToast('Borrador guardado', 'warning');
 });
 
-// ── CARGAR BORRADOR AL INICIO ──
-window.addEventListener('DOMContentLoaded', () => {
-  const borrador = localStorage.getItem('geslasoft_borrador');
-  if (!borrador) return;
-  try {
-    const d = JSON.parse(borrador);
-    document.getElementById('empresa').value       = d.empresa       || '';
-    document.getElementById('rucDni').value        = d.rucDni        || '';
-    document.getElementById('direccion').value     = d.direccion     || '';
-    document.getElementById('nombre').value        = d.nombre        || '';
-    document.getElementById('cargo').value         = d.cargo         || '';
-    document.getElementById('telefono').value      = d.telefono      || '';
-    document.getElementById('email').value         = d.email         || '';
-    document.getElementById('observaciones').value = d.observaciones || '';
-    if (d.items && d.items.length > 0) {
-      items = d.items;
-      renderItems();
-    }
-  } catch (_) {}
+// ── INIT: CARGAR DATOS AL ABRIR ──
+window.addEventListener('DOMContentLoaded', async () => {
 
-  // Cargar laboratorio seleccionado
+  // 1. Cargar laboratorio seleccionado desde localStorage
   const labGuardado = localStorage.getItem('geslasoft_lab');
   if (labGuardado) {
-    const lab = JSON.parse(labGuardado);
-    document.querySelector('.lab-name').textContent     = lab.nombre;
-    document.querySelector('.lab-location').textContent = lab.ubicacion;
+    labActual = JSON.parse(labGuardado);
+    document.querySelector('.lab-name').textContent     = labActual.nombre    || 'Laboratorio';
+    document.querySelector('.lab-location').textContent = labActual.ubicacion || '';
+
+    // 2. Cargar ensayos del laboratorio desde Supabase
+    await cargarEnsayos(labActual.organizacion_id);
+  } else {
+    // Sin lab seleccionado: redirigir a la lista
+    window.location.href = 'laboratorios.html';
+    return;
   }
+
+  // 3. Restaurar borrador si existe
+  const borrador = localStorage.getItem('geslasoft_borrador');
+  if (borrador) {
+    try {
+      const d = JSON.parse(borrador);
+      document.getElementById('empresa').value       = d.empresa       || '';
+      document.getElementById('rucDni').value        = d.rucDni        || '';
+      document.getElementById('direccion').value     = d.direccion     || '';
+      document.getElementById('nombre').value        = d.nombre        || '';
+      document.getElementById('cargo').value         = d.cargo         || '';
+      document.getElementById('telefono').value      = d.telefono      || '';
+      document.getElementById('email').value         = d.email         || '';
+      document.getElementById('observaciones').value = d.observaciones || '';
+      if (d.items?.length > 0) { items = d.items; renderItems(); }
+    } catch (_) {}
+  }
+});
+
+// ── VOLVER A SELECCIONAR LABORATORIO ──
+document.getElementById('cardLab')?.addEventListener('click', () => {
+  window.location.href = 'laboratorios.html';
 });
 
 // ── TOAST ──
@@ -317,25 +409,17 @@ function mostrarToast(msg, tipo = 'accent') {
     danger:  { bg: '#EF4444', color: '#fff' },
   };
   const c = colores[tipo] || colores.accent;
-
   const toast = document.createElement('div');
   toast.textContent = msg;
   Object.assign(toast.style, {
-    position:     'fixed',
-    bottom:       '24px',
-    left:         '50%',
-    transform:    'translateX(-50%)',
-    background:   c.bg,
-    color:        c.color,
-    padding:      '11px 22px',
-    borderRadius: '10px',
-    fontSize:     '14px',
-    fontWeight:   '700',
-    boxShadow:    '0 4px 14px rgba(0,0,0,.18)',
-    zIndex:       '9999',
-    whiteSpace:   'nowrap',
-    opacity:      '0',
-    transition:   'opacity .2s',
+    position: 'fixed', bottom: '24px', left: '50%',
+    transform: 'translateX(-50%)',
+    background: c.bg, color: c.color,
+    padding: '11px 22px', borderRadius: '10px',
+    fontSize: '14px', fontWeight: '700',
+    boxShadow: '0 4px 14px rgba(0,0,0,.18)',
+    zIndex: '9999', whiteSpace: 'nowrap',
+    opacity: '0', transition: 'opacity .2s',
   });
   document.body.appendChild(toast);
   requestAnimationFrame(() => toast.style.opacity = '1');
@@ -344,8 +428,3 @@ function mostrarToast(msg, tipo = 'accent') {
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
-
-// ── VOLVER A SELECCIONAR LABORATORIO ──
-document.getElementById('cardLab')?.addEventListener('click', () => {
-  window.location.href = 'laboratorios.html';
-});
