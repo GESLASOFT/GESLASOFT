@@ -201,6 +201,7 @@ function renderCards(labs) {
 function crearCard(lab, idx) {
   const metodos = lab.metodos_acreditados || [];
 
+
   // Determinar qué chips destacar (coinciden con filtro de método)
   const metodosFiltro = filtroMetodo;
 
@@ -262,7 +263,7 @@ function crearCard(lab, idx) {
 
     ${lab.geslasoft_activo ? `
     <div class="lab-card-footer">
-      <a href="formulario.html" class="btn-cotizar">
+      <button type="button" class="btn-cotizar" data-id="${lab.id}" data-nombre="${lab.nombre}" data-ubicacion="${lab.distrito}, ${lab.provincia}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -271,20 +272,22 @@ function crearCard(lab, idx) {
         </svg>
         Solicitar cotización
       </a>
-    </div>` : ''}
-        
-
-
-
-
-
-
+    </div>` : ''} 
 
 
   `;
-
+  card.querySelector('.btn-cotizar')?.addEventListener('click', () => {
+    localStorage.setItem('geslasoft_lab', JSON.stringify({
+      id:        lab.id,
+      nombre:    lab.nombre,
+      ubicacion: `${lab.distrito}, ${lab.provincia}`,
+    }));
+    window.location.href = 'formulario.html';
+  });
   return card;
 }
+
+
 
 // ── HELPERS ──
 function resetSelect(sel, placeholder) {

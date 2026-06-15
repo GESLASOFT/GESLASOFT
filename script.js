@@ -1,6 +1,6 @@
 // ── DATOS DE ENSAYOS POR DISCIPLINA ──
 const ensayosPorDisciplina = {
-  Suelos: {
+  EnsayosEstandaresSuelos: {
     'Contenido de humedad':           'ASTM D2216',
     'Límites de Atterberg':           'ASTM D4318',
     'Análisis granulométrico':        'ASTM D422',
@@ -30,7 +30,7 @@ const ensayosPorDisciplina = {
     'Contenido de cloruros':          'ASTM D512',
     'Materia orgánica':               'ASTM D2974',
   },
-  Geotecnia: {
+  EnsayosEspecialesSuelos: {
     'Permeabilidad (carga variable)': 'ASTM D5084',
     'Permeabilidad (carga constante)':'ASTM D2434',
     'Ensayo de cono (CPT)':           'ASTM D3441',
@@ -47,11 +47,11 @@ const ensayosPorDisciplina = {
 
 // ── ICONOS POR DISCIPLINA ──
 const iconoDisc = {
-  Suelos:    '🪨',
+  EnsayosEstandaresSuelos:    '🪨',
   Concreto:  '🏗️',
   Roca:      '⛰️',
   Quimicos:  '🧪',
-  Geotecnia: '💧',
+  EnsayosEspecialesSuelos: '💧',
   Agregados: '🔩',
 };
 
@@ -299,6 +299,14 @@ window.addEventListener('DOMContentLoaded', () => {
       renderItems();
     }
   } catch (_) {}
+
+  // Cargar laboratorio seleccionado
+  const labGuardado = localStorage.getItem('geslasoft_lab');
+  if (labGuardado) {
+    const lab = JSON.parse(labGuardado);
+    document.querySelector('.lab-name').textContent     = lab.nombre;
+    document.querySelector('.lab-location').textContent = lab.ubicacion;
+  }
 });
 
 // ── TOAST ──
@@ -336,3 +344,8 @@ function mostrarToast(msg, tipo = 'accent') {
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
+
+// ── VOLVER A SELECCIONAR LABORATORIO ──
+document.getElementById('cardLab')?.addEventListener('click', () => {
+  window.location.href = 'laboratorios.html';
+});

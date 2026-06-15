@@ -24,7 +24,7 @@
 
   <!-- ── CONTENEDOR PRINCIPAL ── -->
   <main class="form-container">
-    <form id="solicitudForm" novalidate>
+    <form id="solicitudForm" autocomplete="on" novalidate>
 
       <!-- CARD: Laboratorio -->
       <div class="card card--lab" id="cardLab" role="button" tabindex="0" aria-label="Cambiar laboratorio">
@@ -41,7 +41,7 @@
         <svg class="lab-swap" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/>
         </svg>
-      </div>
+      </div> <br>
 
       <!-- CARD: Datos del cliente -->
       <div class="card">
@@ -54,7 +54,7 @@
         <div class="card-body">
           <div class="field">
             <label for="empresa">Nombre del cliente (empresa o persona natural) <span class="req">*</span></label>
-            <input type="text" id="empresa" name="empresa" placeholder="Ej: Constructora Lima S.A.C." required />
+            <input type="text" id="empresa" name="empresa" autocomplete="organization" placeholder="Ej: Constructora Lima S.A.C." required />
             <span class="field-error" id="empresa-error">Este campo es requerido</span>
           </div>
           <div class="field">
@@ -66,7 +66,7 @@
             <input type="text" id="direccion" name="direccion" placeholder="Av. / Jr. / Calle..." />
           </div>
         </div>
-      </div>
+      </div> <br>
 
       <!-- CARD: Datos del solicitante -->
       <div class="card">
@@ -98,7 +98,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> <br>
 
       <!-- CARD: Seleccionar ensayos -->
       <div class="card">
@@ -115,12 +115,13 @@
             <label for="disciplina">Disciplina</label>
             <select id="disciplina" name="disciplina">
               <option value="">Seleccionar disciplina</option>
-              <option value="Suelos">🪨 Suelos</option>
-              <option value="Concreto">🏗️ Concreto</option>
-              <option value="Roca">⛰️ Roca</option>
-              <option value="Quimicos">🧪 Químicos</option>
-              <option value="Geotecnia">💧 Geotecnia</option>
-              <option value="Agregados">🔩 Agregados</option>
+              <option value="EnsayosEspecialesSuelos">Suelos - Ensayos Especiales</option>
+              <option value="EnsayosEstandaresSuelos">Suelos - Ensayos Estandar</option>
+              <option value="Concreto">Ensayos en Concreto</option>
+              <option value="Roca">Ensayos en Roca</option>
+              <option value="Quimicos">Ensayos Químicos</option>
+
+              <option value="Agregados">Ensayos en Agregados</option>
             </select>
           </div>
 
@@ -140,7 +141,7 @@
           </div>
 
         </div>
-      </div>
+      </div> <br>
 
       <!-- CARD: Ensayos agregados (oculto hasta agregar ítems) -->
       <div class="card hidden" id="cardItems">
@@ -154,7 +155,7 @@
         <div class="card-body" id="itemsContainer">
           <!-- Generado por script.js -->
         </div>
-      </div>
+      </div> <br>
 
       <!-- CARD: Observaciones -->
       <div class="card">
