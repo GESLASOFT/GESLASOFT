@@ -293,7 +293,7 @@ async function enviarSolicitud() {
       email:                document.getElementById('email').value.trim()       || null,
       observaciones:        document.getElementById('observaciones').value.trim() || null,
       origen:               'portal_cliente',
-      estado:               'pendiente',
+      estado:               'nueva',
       version:              1,
     };
 
