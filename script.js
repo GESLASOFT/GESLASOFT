@@ -1,6 +1,6 @@
 // ── CONFIGURACIÓN SUPABASE ──
 const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_F_XCpSj5urOLhYGZVeyoqQ_AEJRSebP';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
 
 const ORG_ID = '8d3fa0a3-ccfc-40ae-b6fb-7a664d93d464';
 
