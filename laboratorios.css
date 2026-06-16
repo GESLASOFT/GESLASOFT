@@ -288,3 +288,116 @@ select:disabled {
   object-fit: contain;
   padding: 2px;
 }
+
+/* ── BOTÓN COLAPSABLE DE MÉTODOS ── */
+.btn-metodos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: #F8FAFC;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color .15s, background .15s;
+}
+.btn-metodos:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.btn-metodos--open {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.btn-metodos--empty {
+  cursor: default;
+  opacity: .6;
+}
+.btn-metodos--empty:hover {
+  border-color: var(--border);
+  background: #F8FAFC;
+}
+
+.btn-metodos-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+.btn-metodos--open .btn-metodos-label {
+  color: var(--accent);
+}
+.btn-metodos-icon {
+  flex-shrink: 0;
+  color: var(--text-sub);
+}
+.btn-metodos--open .btn-metodos-icon {
+  color: var(--accent);
+}
+
+.btn-metodos-chevron {
+  flex-shrink: 0;
+  color: var(--text-sub);
+  transition: transform .2s ease;
+}
+.btn-metodos--open .btn-metodos-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* ── PANEL DESPLEGABLE ── */
+.metodos-panel {
+  display: none;
+  border: 1.5px solid var(--accent);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.metodos-panel--open {
+  display: block;
+}
+
+/* ── TABLA DE MÉTODOS ── */
+.metodos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.metodos-tabla tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+.metodos-tabla tbody tr:last-child {
+  border-bottom: none;
+}
+.metodos-tabla tbody tr:nth-child(even) {
+  background: #F8FAFC;
+}
+.metodos-tabla tbody tr:nth-child(odd) {
+  background: #fff;
+}
+.metodo-row--highlight .metodo-codigo,
+.metodo-row--highlight .metodo-desc {
+  background: var(--accent-light) !important;
+}
+
+.metodo-codigo {
+  padding: 7px 12px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  width: 1%;
+  vertical-align: middle;
+}
+.metodo-desc {
+  padding: 7px 12px 7px 0;
+  color: var(--text-mid);
+  line-height: 1.4;
+  vertical-align: middle;
+}
