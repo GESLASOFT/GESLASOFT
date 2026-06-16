@@ -44,8 +44,9 @@ async function sbFetch(path, options = {}) {
     ...options,
     headers: { ...HEADERS, ...(options.headers || {}) },
   });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data?.message || JSON.stringify(data));
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new Error(data?.message || text || res.statusText);
   return data;
 }
 
