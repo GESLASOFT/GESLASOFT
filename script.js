@@ -1,10 +1,13 @@
-// ── CONFIGURACIÓN SUPABASE ──
+// ── SUPABASE SDK ──
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
 const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
-const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
+const SUPABASE_ANON = 'sb_publishable_F_XCpSj5urOLhYGZVeyoqQ_AEJRSebP';
+const ORG_ID        = '8d3fa0a3-ccfc-40ae-b6fb-7a664d93d464';
 
-const ORG_ID = '8d3fa0a3-ccfc-40ae-b6fb-7a664d93d464';
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-// ── ICONOS POR DISCIPLINA (para agrupar visualmente) ──
+// ── ICONOS POR DISCIPLINA ──
 const iconoDisc = {
   Suelos:    '🪨',
   Concreto:  '🏗️',
@@ -15,9 +18,9 @@ const iconoDisc = {
 };
 
 // ── ESTADO LOCAL ──
-let items          = [];  // { area_disciplina, ensayo_nombre, norma, cantidad }
-let ensayosDelLab  = [];  // cargados desde Supabase
-let labActual      = null; // objeto guardado en localStorage
+let items         = [];
+let ensayosDelLab = [];
+let labActual     = null;
 
 // ── DOM ──
 const disciplinaSelect = document.getElementById('disciplina');
@@ -32,66 +35,53 @@ const modalOverlay     = document.getElementById('modalOverlay');
 const btnModalAceptar  = document.getElementById('btnModalAceptar');
 const btnBorrador      = document.getElementById('btnBorrador');
 
-// ── CARGAR ENSAYOS DESDE SUPABASE ──
+// ── CARGAR ENSAYOS ──
 async function cargarEnsayos(organizacion_id) {
   if (!organizacion_id) return;
-
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/precios_ensayo?organizacion_id=eq.${organizacion_id}&select=ensayo_nombre,norma&order=ensayo_nombre.asc`,
-    {
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-      }
-    }
-  );
-  const data = await res.json();
-  if (!res.ok) { console.error('Error cargando ensayos:', data); return; }
+  const { data, error } = await supabase
+    .from('precios_ensayo')
+    .select('ensayo_nombre, norma')
+    .eq('organizacion_id', organizacion_id)
+    .order('ensayo_nombre');
+  if (error) { console.error('Error cargando ensayos:', error); return; }
   ensayosDelLab = data;
-
   poblarDisciplinas(data);
 }
 
-// ── MAPA EXACTO: ensayo → disciplina ──
+// ── MAPA ENSAYO → DISCIPLINA ──
 const DISCIPLINA_MAP = {
-  // Suelos
-  'CBR':                      'Suelos',
-  'Consolidación':            'Suelos',
-  'Contenido de humedad':     'Suelos',
-  'Corte directo':            'Suelos',
-  'Granulometría':            'Suelos',
-  'Gravedad específica':      'Suelos',
-  'Límites de Atterberg':     'Suelos',
-  'Permeabilidad':            'Suelos',
-  'Proctor estándar':         'Suelos',
-  'Proctor modificado':       'Suelos',
-  'Resistencia no drenada':   'Suelos',
-  'Triaxial':                 'Suelos',
-  // Concreto
-  'Contenido de aire':        'Concreto',
-  'Densidad del concreto':    'Concreto',
-  'Resistencia a la compresión': 'Concreto',
-  'Slump (asentamiento)':     'Concreto',
-  'Temperatura del concreto': 'Concreto',
-  // Roca
-  'Compresión uniaxial':      'Roca',
-  'Durabilidad':              'Roca',
-  'Point load':               'Roca',
-  'Tracción indirecta (brasileño)': 'Roca',
-  // Agregados
-  'Abrasión Los Ángeles':     'Agregados',
-  'Granulometría (Agregados)':'Agregados',
-  'Gravedad específica fino': 'Agregados',
-  'Gravedad específica grueso':'Agregados',
-  'Impurezas orgánicas':      'Agregados',
-  // Químicos
-  'Calidad del agua':         'Quimicos',
-  'Cloruros':                 'Quimicos',
-  'Materia orgánica':         'Quimicos',
-  'pH del suelo/agua':        'Quimicos',
-  'Sales solubles totales':   'Quimicos',
-  'Sulfatos solubles':        'Quimicos',
+  'CBR':                           'Suelos',
+  'Consolidación':                 'Suelos',
+  'Contenido de humedad':          'Suelos',
+  'Corte directo':                 'Suelos',
+  'Granulometría':                 'Suelos',
+  'Gravedad específica':           'Suelos',
+  'Límites de Atterberg':          'Suelos',
+  'Permeabilidad':                 'Suelos',
+  'Proctor estándar':              'Suelos',
+  'Proctor modificado':            'Suelos',
+  'Resistencia no drenada':        'Suelos',
+  'Triaxial':                      'Suelos',
+  'Contenido de aire':             'Concreto',
+  'Densidad del concreto':         'Concreto',
+  'Resistencia a la compresión':   'Concreto',
+  'Slump (asentamiento)':          'Concreto',
+  'Temperatura del concreto':      'Concreto',
+  'Compresión uniaxial':           'Roca',
+  'Durabilidad':                   'Roca',
+  'Point load':                    'Roca',
+  'Tracción indirecta (brasileño)':'Roca',
+  'Abrasión Los Ángeles':          'Agregados',
+  'Granulometría (Agregados)':     'Agregados',
+  'Gravedad específica fino':      'Agregados',
+  'Gravedad específica grueso':    'Agregados',
+  'Impurezas orgánicas':           'Agregados',
+  'Calidad del agua':              'Quimicos',
+  'Cloruros':                      'Quimicos',
+  'Materia orgánica':              'Quimicos',
+  'pH del suelo/agua':             'Quimicos',
+  'Sales solubles totales':        'Quimicos',
+  'Sulfatos solubles':             'Quimicos',
 };
 
 function inferirDisciplina(nombre) {
@@ -100,7 +90,6 @@ function inferirDisciplina(nombre) {
 
 function poblarDisciplinas(ensayos) {
   const disciplinas = [...new Set(ensayos.map(e => inferirDisciplina(e.ensayo_nombre)))].sort();
-
   disciplinaSelect.innerHTML = '<option value="">Seleccionar disciplina</option>';
   disciplinas.forEach(d => {
     const opt = document.createElement('option');
@@ -125,16 +114,14 @@ disciplinaSelect.addEventListener('change', () => {
 
 // ── RENDER LISTA DE ENSAYOS ──
 function renderEnsayosLista(disc) {
-  const ensayosFiltrados = ensayosDelLab.filter(e => inferirDisciplina(e.ensayo_nombre) === disc);
+  const filtrados = ensayosDelLab.filter(e => inferirDisciplina(e.ensayo_nombre) === disc);
   ensayosLista.innerHTML = '';
-
-  ensayosFiltrados.forEach(({ ensayo_nombre, norma }) => {
+  filtrados.forEach(({ ensayo_nombre, norma }) => {
     const row = document.createElement('div');
     row.className = 'ensayo-item';
     row.dataset.ensayo = ensayo_nombre;
     row.dataset.norma  = norma || '';
     row.dataset.disc   = disc;
-
     row.innerHTML = `
       <div class="ensayo-checkbox">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
@@ -146,7 +133,6 @@ function renderEnsayosLista(disc) {
         <div class="ensayo-norma">${norma || ''}</div>
       </div>
     `;
-
     row.addEventListener('click', () => row.classList.toggle('checked'));
     ensayosLista.appendChild(row);
   });
@@ -156,42 +142,31 @@ function renderEnsayosLista(disc) {
 btnAgregar.addEventListener('click', () => {
   const checked = ensayosLista.querySelectorAll('.ensayo-item.checked');
   if (!checked.length) return;
-
   checked.forEach(row => {
     const ensayo = row.dataset.ensayo;
     const norma  = row.dataset.norma;
     const disc   = row.dataset.disc;
     const existe = items.some(i => i.area_disciplina === disc && i.ensayo_nombre === ensayo);
-    if (!existe) {
-      items.push({ area_disciplina: disc, ensayo_nombre: ensayo, norma, cantidad: 1 });
-    }
+    if (!existe) items.push({ area_disciplina: disc, ensayo_nombre: ensayo, norma, cantidad: 1 });
   });
-
   ensayosLista.querySelectorAll('.ensayo-item').forEach(r => r.classList.remove('checked'));
   disciplinaSelect.value = '';
   ensayosLista.classList.add('hidden');
   btnAgregarWrap.classList.add('hidden');
-
   renderItems();
 });
 
 // ── RENDER ITEMS AGREGADOS ──
 function renderItems() {
-  if (items.length === 0) {
-    cardItems.classList.add('hidden');
-    return;
-  }
-
+  if (items.length === 0) { cardItems.classList.add('hidden'); return; }
   cardItems.classList.remove('hidden');
   cardItemsTitle.textContent = `Ensayos (${items.length})`;
   itemsContainer.innerHTML = '';
-
   const grupos = {};
   items.forEach((item, idx) => {
     if (!grupos[item.area_disciplina]) grupos[item.area_disciplina] = [];
     grupos[item.area_disciplina].push({ ...item, idx });
   });
-
   Object.entries(grupos).forEach(([disc, grupo]) => {
     const grupoDiv = document.createElement('div');
     grupoDiv.className = 'disciplina-grupo';
@@ -201,7 +176,6 @@ function renderItems() {
         <span>${disc.toUpperCase()}</span>
       </div>
     `;
-
     grupo.forEach(({ ensayo_nombre, cantidad, idx }) => {
       const row = document.createElement('div');
       row.className = 'item-row';
@@ -220,20 +194,16 @@ function renderItems() {
       `;
       grupoDiv.appendChild(row);
     });
-
     itemsContainer.appendChild(grupoDiv);
   });
-
   itemsContainer.querySelectorAll('.cant-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const idx    = parseInt(btn.dataset.idx);
-      const action = btn.dataset.action;
-      if (action === 'inc') items[idx].cantidad++;
-      if (action === 'dec' && items[idx].cantidad > 1) items[idx].cantidad--;
+      const idx = parseInt(btn.dataset.idx);
+      if (btn.dataset.action === 'inc') items[idx].cantidad++;
+      if (btn.dataset.action === 'dec' && items[idx].cantidad > 1) items[idx].cantidad--;
       renderItems();
     });
   });
-
   itemsContainer.querySelectorAll('.item-delete').forEach(btn => {
     btn.addEventListener('click', () => {
       items.splice(parseInt(btn.dataset.idx), 1);
@@ -274,27 +244,20 @@ function validarForm() {
 // ── GENERAR NRO COTIZACIÓN ──
 async function generarNroCotizacion() {
   const anio = new Date().getFullYear();
-
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/cotizaciones?organizacion_id=eq.${ORG_ID}&nro_cotizacion=like.COT-${anio}-*&select=nro_cotizacion&order=creado_en.desc&limit=1`,
-    {
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-      }
-    }
-  );
-  const data = await res.json();
+  const { data, error } = await supabase
+    .from('cotizaciones')
+    .select('nro_cotizacion')
+    .eq('organizacion_id', ORG_ID)
+    .like('nro_cotizacion', `COT-${anio}-%`)
+    .order('creado_en', { ascending: false })
+    .limit(1);
 
   let siguiente = 1;
-  if (res.ok && data.length > 0) {
-    // Extraer el número del último: "COT-2026-0025" → 25
+  if (!error && data && data.length > 0) {
     const partes = data[0].nro_cotizacion.split('-');
     const ultimo = parseInt(partes[partes.length - 1], 10);
     if (!isNaN(ultimo)) siguiente = ultimo + 1;
   }
-
   return `COT-${anio}-${String(siguiente).padStart(4, '0')}`;
 }
 
@@ -307,39 +270,30 @@ async function enviarSolicitud() {
   try {
     const organizacion_id = labActual?.organizacion_id || ORG_ID;
 
-    // ── 1. Insertar en solicitudes ──────────────────────────────────────────
-    const solicitudPayload = {
-      organizacion_id,
-      empresa_solicitante:  document.getElementById('empresa').value.trim(),
-      ruc_dni:              document.getElementById('rucDni').value.trim()        || null,
-      direccion:            document.getElementById('direccion').value.trim()     || null,
-      nombre_solicitante:   document.getElementById('nombre').value.trim(),
-      cargo_solicitante:    document.getElementById('cargo').value.trim()         || null,
-      telefono:             document.getElementById('telefono').value.trim(),
-      email:                document.getElementById('email').value.trim()         || null,
-      observaciones:        document.getElementById('observaciones').value.trim() || null,
-      origen:               'portal_cliente',
-      estado:               'nueva',
-      version:              1,
-    };
+    // ── 1. Insertar solicitud ──
+    const { data: solData, error: solError } = await supabase
+      .from('solicitudes')
+      .insert({
+        organizacion_id,
+        empresa_solicitante:  document.getElementById('empresa').value.trim(),
+        ruc_dni:              document.getElementById('rucDni').value.trim()        || null,
+        direccion:            document.getElementById('direccion').value.trim()     || null,
+        nombre_solicitante:   document.getElementById('nombre').value.trim(),
+        cargo_solicitante:    document.getElementById('cargo').value.trim()         || null,
+        telefono:             document.getElementById('telefono').value.trim(),
+        email:                document.getElementById('email').value.trim()         || null,
+        observaciones:        document.getElementById('observaciones').value.trim() || null,
+        origen:               'portal_cliente',
+        estado:               'nueva',
+        version:              1,
+      })
+      .select()
+      .single();
 
-    const resSol = await fetch(`${SUPABASE_URL}/rest/v1/solicitudes`, {
-      method: 'POST',
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
-      },
-      body: JSON.stringify(solicitudPayload),
-    });
+    if (solError) throw new Error(solError.message);
+    const solicitud_id = solData.id;
 
-    const respSol = await resSol.json();
-    if (!resSol.ok) throw new Error(respSol?.message || JSON.stringify(respSol));
-    const solicitud = Array.isArray(respSol) ? respSol[0] : respSol;
-    const solicitud_id = solicitud.id;
-
-    // ── 2. Insertar solicitud_items ─────────────────────────────────────────
+    // ── 2. Insertar solicitud_items ──
     const solicitudItemsPayload = items.map(item => ({
       organizacion_id,
       solicitud_id,
@@ -349,96 +303,65 @@ async function enviarSolicitud() {
       cantidad:        item.cantidad,
     }));
 
-    const resItems = await fetch(`${SUPABASE_URL}/rest/v1/solicitud_items`, {
-      method: 'POST',
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
-      },
-      body: JSON.stringify(solicitudItemsPayload),
-    });
+    const { data: solItemsData, error: solItemsError } = await supabase
+      .from('solicitud_items')
+      .insert(solicitudItemsPayload)
+      .select();
 
-    const respSolicitudItems = await resItems.json();
-    if (!resItems.ok) throw new Error(respSolicitudItems?.message || 'Error al guardar los ensayos');
+    if (solItemsError) throw new Error(solItemsError.message);
 
-    // Construir mapa ensayo_nombre → solicitud_item_id para relacionar
-    // (respSolicitudItems es array con los items insertados + sus ids)
-    const solicitudItemsInsertados = Array.isArray(respSolicitudItems) ? respSolicitudItems : [];
-
-    // ── 3. Crear cotización en borrador ─────────────────────────────────────
+    // ── 3. Crear cotización en borrador ──
     const nroCotizacion = await generarNroCotizacion();
 
-    const cotizacionPayload = {
-      organizacion_id,
-      nro_cotizacion:  nroCotizacion,
-      solicitud_id,
-      nombre_cliente:  document.getElementById('empresa').value.trim(),
-      empresa_cliente: document.getElementById('empresa').value.trim(),
-      ruc_cliente:     document.getElementById('rucDni').value.trim()    || null,
-      email_cliente:   document.getElementById('email').value.trim()     || null,
-      moneda:          'PEN',
-      estado:          'borrador',
-      version:         1,
-      incluye_igv:     true,
-      plazo_entrega_dias: 5,
-      validez_dias:       15,
-    };
+    const { data: cotData, error: cotError } = await supabase
+      .from('cotizaciones')
+      .insert({
+        organizacion_id,
+        nro_cotizacion:     nroCotizacion,
+        solicitud_id,
+        nombre_cliente:     document.getElementById('empresa').value.trim(),
+        empresa_cliente:    document.getElementById('empresa').value.trim(),
+        ruc_cliente:        document.getElementById('rucDni').value.trim()  || null,
+        email_cliente:      document.getElementById('email').value.trim()   || null,
+        moneda:             'PEN',
+        estado:             'borrador',
+        version:            1,
+        incluye_igv:        true,
+        plazo_entrega_dias: 5,
+        validez_dias:       15,
+      })
+      .select()
+      .single();
 
-    const resCot = await fetch(`${SUPABASE_URL}/rest/v1/cotizaciones`, {
-      method: 'POST',
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
-      },
-      body: JSON.stringify(cotizacionPayload),
-    });
+    if (cotError) throw new Error(cotError.message);
+    const cotizacion_id = cotData.id;
 
-    const respCot = await resCot.json();
-    if (!resCot.ok) throw new Error(respCot?.message || 'Error al crear la cotización');
-    const cotizacion = Array.isArray(respCot) ? respCot[0] : respCot;
-    const cotizacion_id = cotizacion.id;
-
-    // ── 4. Insertar cotizacion_items ────────────────────────────────────────
-    const cotizacionItemsPayload = items.map((item, idx) => {
-      // Relacionar con el solicitud_item correspondiente (por posición o por nombre)
-      const solItem = solicitudItemsInsertados.find(si =>
+    // ── 4. Insertar cotizacion_items ──
+    const cotItemsPayload = items.map(item => {
+      const solItem = (solItemsData || []).find(si =>
         si.ensayo_nombre === item.ensayo_nombre && si.area_disciplina === item.area_disciplina
       );
-
       return {
         organizacion_id,
         cotizacion_id,
-        solicitud_item_id:  solItem?.id || null,
-        area_disciplina:    item.area_disciplina,
-        ensayo_nombre:      item.ensayo_nombre,
-        norma:              item.norma || '',
-        cantidad:           item.cantidad,
-        precio_unitario:    0,     // el laboratorio lo completará al preparar la cotización
+        solicitud_item_id: solItem?.id || null,
+        area_disciplina:   item.area_disciplina,
+        ensayo_nombre:     item.ensayo_nombre,
+        norma:             item.norma || '',
+        cantidad:          item.cantidad,
+        precio_unitario:   0,
       };
     });
 
-    const resCotItems = await fetch(`${SUPABASE_URL}/rest/v1/cotizacion_items`, {
-      method: 'POST',
-      headers: {
-        'apikey':        SUPABASE_ANON,
-        'Authorization': `Bearer ${SUPABASE_ANON}`,
-        'Content-Type':  'application/json',
-      },
-      body: JSON.stringify(cotizacionItemsPayload),
-    });
+    const { error: cotItemsError } = await supabase
+      .from('cotizacion_items')
+      .insert(cotItemsPayload);
 
-    if (!resCotItems.ok) {
-      const errCotItems = await resCotItems.json();
-      throw new Error(errCotItems?.message || 'Error al guardar los ítems de cotización');
-    }
+    if (cotItemsError) throw new Error(cotItemsError.message);
 
-    // ── Éxito ───────────────────────────────────────────────────────────────
+    // ── Éxito ──
     document.querySelector('.modal-desc').innerHTML =
-      `Registrada correctamente con el número <strong>${solicitud.nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
+      `Registrada correctamente con el número <strong>${solData.nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
     modalOverlay.classList.remove('hidden');
     localStorage.removeItem('geslasoft_borrador');
 
@@ -491,15 +414,13 @@ btnBorrador.addEventListener('click', () => {
   mostrarToast('Borrador guardado', 'warning');
 });
 
-// ── INIT: CARGAR DATOS AL ABRIR ──
+// ── INIT ──
 window.addEventListener('DOMContentLoaded', async () => {
-
   const labGuardado = localStorage.getItem('geslasoft_lab');
   if (labGuardado) {
     labActual = JSON.parse(labGuardado);
     document.querySelector('.lab-name').textContent     = labActual.nombre    || 'Laboratorio';
     document.querySelector('.lab-location').textContent = labActual.ubicacion || '';
-
     await cargarEnsayos(labActual.organizacion_id);
   } else {
     window.location.href = 'laboratorios.html';
