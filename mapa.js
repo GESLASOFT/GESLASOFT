@@ -111,8 +111,28 @@ function formatDistancia(km) {
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
+// ── DESACTIVAR CERCA DE MÍ ──
+function desactivarCercaDeMi() {
+  if (marcadorUsuario) { mapa.removeLayer(marcadorUsuario); marcadorUsuario = null; }
+  if (circuloUsuario)  { mapa.removeLayer(circuloUsuario);  circuloUsuario  = null; }
+
+  // Limpiar distancias
+  todosLosLabs.forEach(l => delete l._distKm);
+
+  btnCercaDeMi.classList.remove('btn-cercademi--activo');
+
+  // Volver a renderizar sin distancias
+  aplicarFiltros();
+}
+
 // ── BOTÓN CERCA DE MÍ ──
 btnCercaDeMi.addEventListener('click', () => {
+  // Toggle: si ya está activo, desactivar
+  if (btnCercaDeMi.classList.contains('btn-cercademi--activo')) {
+    desactivarCercaDeMi();
+    return;
+  }
+
   if (!navigator.geolocation) {
     alert('Tu navegador no soporta geolocalización.');
     return;
