@@ -156,7 +156,10 @@ function aplicarFiltros() {
   if (filtroMetodo) {
     resultado = resultado.filter(l => {
       const metodos = l.metodos_acreditados || [];
-      return metodos.some(m => m.toLowerCase().includes(filtroMetodo));
+      return metodos.some(m => {
+        const texto = `${m.codigo || ''} ${m.descripcion || ''}`.toLowerCase();
+        return texto.includes(filtroMetodo);
+      });
     });
   }
 
@@ -182,15 +185,25 @@ function renderCards(labs) {
 
 // ── CREAR CARD ──
 function crearCard(lab, idx) {
-  const metodos      = lab.metodos_acreditados || [];
-  const metodosFiltro = filtroMetodo;
+  const metodos = lab.metodos_acreditados || [];
+  const count   = metodos.length;
 
-  const chipsHtml = metodos.length > 0
-    ? metodos.map(m => {
-        const highlight = metodosFiltro && m.toLowerCase().includes(metodosFiltro);
-        return `<span class="chip ${highlight ? 'chip--highlight' : ''}">${m}</span>`;
-      }).join('')
-    : `<span class="chip chip--empty">Sin métodos registrados</span>`;
+  // Etiqueta del botón colapsable
+  const btnLabel = count === 0
+    ? 'Sin métodos registrados'
+    : `${count} método${count !== 1 ? 's' : ''} acreditado${count !== 1 ? 's' : ''}`;
+
+  // Filas de la tabla (solo si hay métodos)
+  const filasHtml = metodos.map(m => {
+    const codigo = m.codigo || '';
+    const desc   = m.descripcion || '';
+    const hl     = filtroMetodo && `${codigo} ${desc}`.toLowerCase().includes(filtroMetodo);
+    return `
+      <tr class="${hl ? 'metodo-row--highlight' : ''}">
+        <td class="metodo-codigo">${codigo}</td>
+        <td class="metodo-desc">${desc}</td>
+      </tr>`;
+  }).join('');
 
   const card = document.createElement('div');
   card.className = 'lab-card';
@@ -228,16 +241,37 @@ function crearCard(lab, idx) {
         : '<span class="lab-badge-no-acreditado">✗ NO ACREDITADO</span>'}
     </div>
 
-    ${metodos.length > 0 ? `
     <div class="lab-card-body">
-      <div>
-        <div class="lab-metodos-label">Métodos acreditados</div>
-        <div class="lab-metodos-chips">${chipsHtml}</div>
-      </div>
-    </div>` : `
-    <div class="lab-card-body">
-      <div class="lab-metodos-chips">${chipsHtml}</div>
-    </div>`}
+      <button type="button" class="btn-metodos ${count === 0 ? 'btn-metodos--empty' : ''}">
+        <span class="btn-metodos-label">
+          <svg class="btn-metodos-icon" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10
+                     a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          ${btnLabel}
+        </span>
+        ${count > 0 ? `
+        <svg class="btn-metodos-chevron" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>` : ''}
+      </button>
+
+      ${count > 0 ? `
+      <div class="metodos-panel">
+        <table class="metodos-tabla">
+          <tbody>
+            ${filasHtml}
+          </tbody>
+        </table>
+      </div>` : ''}
+    </div>
 
     ${lab.geslasoft_activo ? `
     <div class="lab-card-footer">
@@ -253,12 +287,21 @@ function crearCard(lab, idx) {
     </div>` : ''}
   `;
 
+  // ── TOGGLE COLAPSABLE ──
+  const btnMetodos = card.querySelector('.btn-metodos');
+  const panel      = card.querySelector('.metodos-panel');
+  if (btnMetodos && panel) {
+    btnMetodos.addEventListener('click', () => {
+      const abierto = panel.classList.toggle('metodos-panel--open');
+      btnMetodos.classList.toggle('btn-metodos--open', abierto);
+    });
+  }
+
   // ── GUARDAR LAB EN localStorage AL HACER CLIC ──
-  // Se guarda organizacion_id (uuid) que es lo que necesita el formulario para insertar en Supabase
   card.querySelector('.btn-cotizar')?.addEventListener('click', () => {
     localStorage.setItem('geslasoft_lab', JSON.stringify({
-      id:              lab.id,                // integer (id de laboratorios)
-      organizacion_id: lab.organizacion_id,   // uuid — clave para insertar solicitudes
+      id:              lab.id,
+      organizacion_id: lab.organizacion_id,
       nombre:          lab.nombre,
       ubicacion:       [lab.distrito, lab.provincia].filter(Boolean).join(', '),
     }));
