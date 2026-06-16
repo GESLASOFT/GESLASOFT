@@ -1,11 +1,14 @@
-// ── SUPABASE SDK ──
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
+// ── CONFIGURACIÓN SUPABASE ──
 const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_F_XCpSj5urOLhYGZVeyoqQ_AEJRSebP';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
 const ORG_ID        = '8d3fa0a3-ccfc-40ae-b6fb-7a664d93d464';
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON);
+// ── HEADERS COMUNES ──
+const HEADERS = {
+  'apikey':        SUPABASE_ANON,
+  'Authorization': `Bearer ${SUPABASE_ANON}`,
+  'Content-Type':  'application/json',
+};
 
 // ── ICONOS POR DISCIPLINA ──
 const iconoDisc = {
@@ -35,15 +38,23 @@ const modalOverlay     = document.getElementById('modalOverlay');
 const btnModalAceptar  = document.getElementById('btnModalAceptar');
 const btnBorrador      = document.getElementById('btnBorrador');
 
+// ── FETCH HELPER ──
+async function sbFetch(path, options = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: { ...HEADERS, ...(options.headers || {}) },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.message || JSON.stringify(data));
+  return data;
+}
+
 // ── CARGAR ENSAYOS ──
 async function cargarEnsayos(organizacion_id) {
   if (!organizacion_id) return;
-  const { data, error } = await supabase
-    .from('precios_ensayo')
-    .select('ensayo_nombre, norma')
-    .eq('organizacion_id', organizacion_id)
-    .order('ensayo_nombre');
-  if (error) { console.error('Error cargando ensayos:', error); return; }
+  const data = await sbFetch(
+    `precios_ensayo?organizacion_id=eq.${organizacion_id}&select=ensayo_nombre,norma&order=ensayo_nombre.asc`
+  );
   ensayosDelLab = data;
   poblarDisciplinas(data);
 }
@@ -244,21 +255,20 @@ function validarForm() {
 // ── GENERAR NRO COTIZACIÓN ──
 async function generarNroCotizacion() {
   const anio = new Date().getFullYear();
-  const { data, error } = await supabase
-    .from('cotizaciones')
-    .select('nro_cotizacion')
-    .eq('organizacion_id', ORG_ID)
-    .like('nro_cotizacion', `COT-${anio}-%`)
-    .order('creado_en', { ascending: false })
-    .limit(1);
-
-  let siguiente = 1;
-  if (!error && data && data.length > 0) {
-    const partes = data[0].nro_cotizacion.split('-');
-    const ultimo = parseInt(partes[partes.length - 1], 10);
-    if (!isNaN(ultimo)) siguiente = ultimo + 1;
+  try {
+    const data = await sbFetch(
+      `cotizaciones?organizacion_id=eq.${ORG_ID}&nro_cotizacion=like.COT-${anio}-*&select=nro_cotizacion&order=creado_en.desc&limit=1`
+    );
+    let siguiente = 1;
+    if (data.length > 0) {
+      const partes = data[0].nro_cotizacion.split('-');
+      const ultimo = parseInt(partes[partes.length - 1], 10);
+      if (!isNaN(ultimo)) siguiente = ultimo + 1;
+    }
+    return `COT-${anio}-${String(siguiente).padStart(4, '0')}`;
+  } catch (_) {
+    return `COT-${anio}-0001`;
   }
-  return `COT-${anio}-${String(siguiente).padStart(4, '0')}`;
 }
 
 // ── ENVIAR A SUPABASE ──
@@ -271,9 +281,10 @@ async function enviarSolicitud() {
     const organizacion_id = labActual?.organizacion_id || ORG_ID;
 
     // ── 1. Insertar solicitud ──
-    const { data: solData, error: solError } = await supabase
-      .from('solicitudes')
-      .insert({
+    const solicitud = await sbFetch('solicitudes', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({
         organizacion_id,
         empresa_solicitante:  document.getElementById('empresa').value.trim(),
         ruc_dni:              document.getElementById('rucDni').value.trim()        || null,
@@ -286,36 +297,31 @@ async function enviarSolicitud() {
         origen:               'portal_cliente',
         estado:               'nueva',
         version:              1,
-      })
-      .select()
-      .single();
-
-    if (solError) throw new Error(solError.message);
-    const solicitud_id = solData.id;
+      }),
+    });
+    const solicitud_id = (Array.isArray(solicitud) ? solicitud[0] : solicitud).id;
+    const nro_solicitud = (Array.isArray(solicitud) ? solicitud[0] : solicitud).nro_solicitud;
 
     // ── 2. Insertar solicitud_items ──
-    const solicitudItemsPayload = items.map(item => ({
-      organizacion_id,
-      solicitud_id,
-      area_disciplina: item.area_disciplina,
-      ensayo_nombre:   item.ensayo_nombre,
-      norma:           item.norma || '',
-      cantidad:        item.cantidad,
-    }));
-
-    const { data: solItemsData, error: solItemsError } = await supabase
-      .from('solicitud_items')
-      .insert(solicitudItemsPayload)
-      .select();
-
-    if (solItemsError) throw new Error(solItemsError.message);
+    const solItems = await sbFetch('solicitud_items', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify(items.map(item => ({
+        organizacion_id,
+        solicitud_id,
+        area_disciplina: item.area_disciplina,
+        ensayo_nombre:   item.ensayo_nombre,
+        norma:           item.norma || '',
+        cantidad:        item.cantidad,
+      }))),
+    });
 
     // ── 3. Crear cotización en borrador ──
     const nroCotizacion = await generarNroCotizacion();
-
-    const { data: cotData, error: cotError } = await supabase
-      .from('cotizaciones')
-      .insert({
+    const cotizacion = await sbFetch('cotizaciones', {
+      method: 'POST',
+      headers: { 'Prefer': 'return=representation' },
+      body: JSON.stringify({
         organizacion_id,
         nro_cotizacion:     nroCotizacion,
         solicitud_id,
@@ -329,39 +335,34 @@ async function enviarSolicitud() {
         incluye_igv:        true,
         plazo_entrega_dias: 5,
         validez_dias:       15,
-      })
-      .select()
-      .single();
-
-    if (cotError) throw new Error(cotError.message);
-    const cotizacion_id = cotData.id;
+      }),
+    });
+    const cotizacion_id = (Array.isArray(cotizacion) ? cotizacion[0] : cotizacion).id;
 
     // ── 4. Insertar cotizacion_items ──
-    const cotItemsPayload = items.map(item => {
-      const solItem = (solItemsData || []).find(si =>
-        si.ensayo_nombre === item.ensayo_nombre && si.area_disciplina === item.area_disciplina
-      );
-      return {
-        organizacion_id,
-        cotizacion_id,
-        solicitud_item_id: solItem?.id || null,
-        area_disciplina:   item.area_disciplina,
-        ensayo_nombre:     item.ensayo_nombre,
-        norma:             item.norma || '',
-        cantidad:          item.cantidad,
-        precio_unitario:   0,
-      };
+    const solItemsArr = Array.isArray(solItems) ? solItems : [];
+    await sbFetch('cotizacion_items', {
+      method: 'POST',
+      body: JSON.stringify(items.map(item => {
+        const solItem = solItemsArr.find(si =>
+          si.ensayo_nombre === item.ensayo_nombre && si.area_disciplina === item.area_disciplina
+        );
+        return {
+          organizacion_id,
+          cotizacion_id,
+          solicitud_item_id: solItem?.id || null,
+          area_disciplina:   item.area_disciplina,
+          ensayo_nombre:     item.ensayo_nombre,
+          norma:             item.norma || '',
+          cantidad:          item.cantidad,
+          precio_unitario:   0,
+        };
+      })),
     });
-
-    const { error: cotItemsError } = await supabase
-      .from('cotizacion_items')
-      .insert(cotItemsPayload);
-
-    if (cotItemsError) throw new Error(cotItemsError.message);
 
     // ── Éxito ──
     document.querySelector('.modal-desc').innerHTML =
-      `Registrada correctamente con el número <strong>${solData.nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
+      `Registrada correctamente con el número <strong>${nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
     modalOverlay.classList.remove('hidden');
     localStorage.removeItem('geslasoft_borrador');
 
