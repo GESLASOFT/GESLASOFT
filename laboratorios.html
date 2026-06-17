@@ -72,9 +72,30 @@
       </div>
       <div class="card-body">
 
-        <!-- PASO 1: UBICACIÓN -->
+        <!-- PASO 1: BÚSQUEDA UNIFICADA -->
         <p class="filter-step-label">
-          <span class="step-badge">1</span> Por ubicación
+          <span class="step-badge">1</span> Buscar por nombre, código o descripción
+        </p>
+
+        <div class="field search-field">
+          <label for="filBusqueda">Nombre de empresa, código o descripción</label>
+          <div class="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="var(--text-sub)" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="filBusqueda"
+                   placeholder="Ej: LabTest SAC, ASTM D422, granulometría..." />
+          </div>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <!-- PASO 2: UBICACIÓN -->
+        <p class="filter-step-label">
+          <span class="step-badge">2</span> Por ubicación
         </p>
 
         <div class="field">
@@ -100,36 +121,17 @@
 
         <div class="filter-divider"></div>
 
-        <!-- PASO 2: MÉTODO -->
+        <!-- PASO 3: ESTADO DE ACREDITACIÓN -->
         <p class="filter-step-label">
-          <span class="step-badge">2</span> Filtrar por método acreditado
-        </p>
-
-        <div class="field search-field">
-          <label for="filMetodo">Norma o método</label>
-          <div class="search-wrap">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                 stroke="var(--text-sub)" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"/>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <input type="text" id="filMetodo"
-                   placeholder="Ej: ASTM D422, NTP 339.128..." />
-          </div>
-        </div>
-
-        <div class="filter-divider"></div>
-
-        <!-- PASO 3: ACREDITACIÓN -->
-        <p class="filter-step-label">
-          <span class="step-badge">3</span> Por acreditación
+          <span class="step-badge">3</span> Por estado de acreditación
         </p>
 
         <div class="tabs-acreditacion">
           <button class="tab-btn tab-btn--active" data-filtro="todos">Todos</button>
-          <button class="tab-btn" data-filtro="acreditados">Acreditados</button>
-          <button class="tab-btn" data-filtro="no_acreditados">No acreditados</button>
+          <button class="tab-btn" data-filtro="acreditado">Acreditados</button>
+          <button class="tab-btn" data-filtro="no_acreditado">No acreditados</button>
+          <button class="tab-btn" data-filtro="suspendido">Suspendidos</button>
+          <button class="tab-btn" data-filtro="en_proceso">En proceso</button>
         </div>
 
         <!-- BOTÓN LIMPIAR -->

@@ -3,22 +3,23 @@ const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
 
 // ── ESTADO ──
-let todosLosLabs   = [];
-let filtroMetodo   = '';
+let todosLosLabs       = [];
+let filtroBusqueda     = '';   // unifica nombre + método
 let filtroAcreditacion = 'todos';
 
 // ── DOM ──
-const selDep     = document.getElementById('filDepartamento');
-const selProv    = document.getElementById('filProvincia');
-const selDist    = document.getElementById('filDistrito');
-const inputMet   = document.getElementById('filMetodo');
-const btnLimpiar = document.getElementById('btnLimpiar');
-const listaLabs  = document.getElementById('listaLabs');
-const cargando   = document.getElementById('estadoCargando');
-const vacio      = document.getElementById('estadoVacio');
-const resHeader  = document.getElementById('resultadosHeader');
-const resCount   = document.getElementById('resultadosCount');
+const selDep      = document.getElementById('filDepartamento');
+const selProv     = document.getElementById('filProvincia');
+const selDist     = document.getElementById('filDistrito');
+const inputBusq   = document.getElementById('filBusqueda');   // ← nuevo campo unificado
+const btnLimpiar  = document.getElementById('btnLimpiar');
+const listaLabs   = document.getElementById('listaLabs');
+const cargando    = document.getElementById('estadoCargando');
+const vacio       = document.getElementById('estadoVacio');
+const resHeader   = document.getElementById('resultadosHeader');
+const resCount    = document.getElementById('resultadosCount');
 
+// ── TABS ACREDITACIÓN ──
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
@@ -29,7 +30,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 // ── FETCH SUPABASE ──
-// Trae laboratorios activos junto con el organizacion_id de la tabla laboratorios
+// Trae laboratorios activos; usa campo "estado" en lugar del booleano "acreditado"
 async function fetchLabs() {
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/laboratorios?activo=eq.true&select=*&order=nombre.asc`,
@@ -117,12 +118,12 @@ selProv.addEventListener('change', () => {
 
 selDist.addEventListener('change', aplicarFiltros);
 
-// ── FILTRO MÉTODO (debounce) ──
-let metodoTimer;
-inputMet.addEventListener('input', () => {
-  clearTimeout(metodoTimer);
-  metodoTimer = setTimeout(() => {
-    filtroMetodo = inputMet.value.trim().toLowerCase();
+// ── FILTRO BÚSQUEDA UNIFICADA (debounce) ──
+let busqTimer;
+inputBusq.addEventListener('input', () => {
+  clearTimeout(busqTimer);
+  busqTimer = setTimeout(() => {
+    filtroBusqueda = inputBusq.value.trim().toLowerCase();
     aplicarFiltros();
   }, 300);
 });
@@ -134,8 +135,8 @@ btnLimpiar.addEventListener('click', () => {
   resetSelect(selDist, 'Todos los distritos');
   selProv.disabled = true;
   selDist.disabled = true;
-  inputMet.value = '';
-  filtroMetodo   = '';
+  inputBusq.value    = '';
+  filtroBusqueda     = '';
   filtroAcreditacion = 'todos';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
   document.querySelector('.tab-btn[data-filtro="todos"]').classList.add('tab-btn--active');
@@ -149,25 +150,55 @@ function aplicarFiltros() {
   const dist = selDist.value;
 
   let resultado = todosLosLabs;
+
+  // Filtro ubicación
   if (dep)  resultado = resultado.filter(l => l.departamento === dep);
   if (prov) resultado = resultado.filter(l => l.provincia    === prov);
   if (dist) resultado = resultado.filter(l => l.distrito     === dist);
 
-  if (filtroMetodo) {
+  // Filtro búsqueda unificada: nombre de empresa + código + descripción de método
+  if (filtroBusqueda) {
     resultado = resultado.filter(l => {
+      // buscar en nombre del laboratorio
+      const nombreMatch = (l.nombre || '').toLowerCase().includes(filtroBusqueda);
+      // buscar en métodos acreditados (código + descripción)
       const metodos = l.metodos_acreditados || [];
-      return metodos.some(m => {
+      const metodoMatch = metodos.some(m => {
         const texto = `${m.codigo || ''} ${m.descripcion || ''}`.toLowerCase();
-        return texto.includes(filtroMetodo);
+        return texto.includes(filtroBusqueda);
       });
+      return nombreMatch || metodoMatch;
     });
   }
 
-  if (filtroAcreditacion === 'acreditados')    resultado = resultado.filter(l => l.acreditado === true);
-  if (filtroAcreditacion === 'no_acreditados') resultado = resultado.filter(l => l.acreditado === false);
+  // Filtro estado de acreditación
+  // Soporta tanto el campo nuevo "estado" (string) como el legacy booleano "acreditado"
+  if (filtroAcreditacion !== 'todos') {
+    resultado = resultado.filter(l => {
+      const estado = obtenerEstado(l);
+      return estado === filtroAcreditacion;
+    });
+  }
 
   renderCards(resultado);
 }
+
+// ── OBTENER ESTADO NORMALIZADO ──
+// Compatibilidad: si existe l.estado lo usa; si no, cae al booleano l.acreditado
+function obtenerEstado(lab) {
+  if (lab.estado) return lab.estado; // 'acreditado' | 'no_acreditado' | 'suspendido' | 'en_proceso'
+  if (lab.acreditado === true)  return 'acreditado';
+  if (lab.acreditado === false) return 'no_acreditado';
+  return 'no_acreditado';
+}
+
+// ── CONFIG DE BADGES ──
+const ESTADO_CONFIG = {
+  acreditado:    { label: '✓ ACREDITADO',    cls: 'lab-badge-acreditado'    },
+  no_acreditado: { label: '✗ NO ACREDITADO', cls: 'lab-badge-no-acreditado' },
+  suspendido:    { label: '⏸ SUSPENDIDO',    cls: 'lab-badge-suspendido'    },
+  en_proceso:    { label: '⏳ EN PROCESO',    cls: 'lab-badge-en-proceso'    },
+};
 
 // ── RENDER CARDS ──
 function renderCards(labs) {
@@ -188,22 +219,26 @@ function crearCard(lab, idx) {
   const metodos = lab.metodos_acreditados || [];
   const count   = metodos.length;
 
-  // Etiqueta del botón colapsable
   const btnLabel = count === 0
     ? 'Sin métodos registrados'
     : `${count} método${count !== 1 ? 's' : ''} acreditado${count !== 1 ? 's' : ''}`;
 
-  // Filas de la tabla (solo si hay métodos)
   const filasHtml = metodos.map(m => {
     const codigo = m.codigo || '';
     const desc   = m.descripcion || '';
-    const hl     = filtroMetodo && `${codigo} ${desc}`.toLowerCase().includes(filtroMetodo);
+    // highlight si el texto buscado coincide con código, descripción o nombre
+    const hl = filtroBusqueda && `${codigo} ${desc}`.toLowerCase().includes(filtroBusqueda);
     return `
       <tr class="${hl ? 'metodo-row--highlight' : ''}">
         <td class="metodo-codigo">${codigo}</td>
         <td class="metodo-desc">${desc}</td>
       </tr>`;
   }).join('');
+
+  // Badge según estado
+  const estado = obtenerEstado(lab);
+  const cfg    = ESTADO_CONFIG[estado] || ESTADO_CONFIG['no_acreditado'];
+  const badgeHtml = `<span class="${cfg.cls}">${cfg.label}</span>`;
 
   const card = document.createElement('div');
   card.className = 'lab-card';
@@ -236,9 +271,7 @@ function crearCard(lab, idx) {
         </div>
         ${lab.direccion ? `<div class="lab-card-location" style="margin-top:2px">${lab.direccion}</div>` : ''}
       </div>
-      ${lab.acreditado
-        ? '<span class="lab-badge-acreditado">✓ ACREDITADO</span>'
-        : '<span class="lab-badge-no-acreditado">✗ NO ACREDITADO</span>'}
+      ${badgeHtml}
     </div>
 
     <div class="lab-card-body">
