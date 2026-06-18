@@ -335,6 +335,7 @@ function crearCard(lab, idx) {
     localStorage.setItem('geslasoft_lab', JSON.stringify({
       id:              lab.id,
       organizacion_id: lab.organizacion_id,
+      codigo:          lab.codigo, 
       nombre:          lab.nombre,
       ubicacion:       [lab.distrito, lab.provincia].filter(Boolean).join(', '),
     }));

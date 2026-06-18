@@ -986,3 +986,47 @@ img {
     flex-direction: column;
   }
 }
+
+/* ── MODO OSCURO ── */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background:   #111827;
+    --white:        #1F2937;
+    --border:       #374151;
+    --text:         #F9FAFB;
+    --muted:        #9CA3AF;
+    --navy:         #E2E8F0;
+    --shadow:       0 24px 60px rgba(0,0,0,.4);
+    --shadow-soft:  0 12px 35px rgba(0,0,0,.3);
+  }
+
+  .site-header {
+    background: rgba(17,24,39,.93);
+    border-bottom-color: rgba(55,65,81,.9);
+  }
+
+  .hero {
+    background: radial-gradient(circle at 84% 14%, rgba(71,169,231,.08), transparent 31%),
+                linear-gradient(180deg, #111827 0%, #0f172a 100%);
+  }
+
+  .dashboard-card,
+  .feature-card,
+  .floating-card {
+    background: #1F2937;
+    border-color: #374151;
+  }
+
+  .dashboard-stats article {
+    background: #111827;
+  }
+
+  .main-navigation {
+    background: #1F2937;
+    border-color: #374151;
+  }
+
+  .about-section {
+    background: #1F2937;
+  }
+}
