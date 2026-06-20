@@ -1,151 +1,8 @@
-/* ───────────────────────────────────────────── */
-/* TOKENS */
-/* ───────────────────────────────────────────── */
-
-:root {
-  --accent: #00897B;
-  --accent-light: #E0F2F1;
-  --accent-mid: #26A69A;
-
-  --blue: #1565C0;
-  --blue-light: #E3F0FF;
-
-  --bg: #F3F4F6;
-  --surface: #FFFFFF;
-
-  --border: #E5E7EB;
-  --border-focus: #00897B;
-
-  --text: #111827;
-  --text-mid: #4B5563;
-  --text-sub: #9CA3AF;
-
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.07),
-               0 1px 2px rgba(0,0,0,.05);
-
-  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
-
-  --font: system-ui, -apple-system, sans-serif;
-}
-
-/* ───────────────────────────────────────────── */
-/* RESET */
-/* ───────────────────────────────────────────── */
-
-*,
-*::before,
-*::after{
-    box-sizing:border-box;
-    margin:0;
-    padding:0;
-}
-
-/* ───────────────────────────────────────────── */
-/* BASE */
-/* ───────────────────────────────────────────── */
-
-body{
-    font-family:var(--font);
-    background:var(--bg);
-    color:var(--text);
-    min-height:100vh;
-}
-
-/* ───────────────────────────────────────────── */
-/* HEADER */
-/* ───────────────────────────────────────────── */
-
-.app-header{
-    position:sticky;
-    top:0;
-    z-index:100;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    padding:14px 20px;
-    background:var(--surface);
-    border-bottom:1px solid var(--border);
-    box-shadow:var(--shadow-sm);
-}
-
-.btn-back{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    width:34px;
-    height:34px;
-    border:none;
-    background:transparent;
-    color:var(--text-mid);
-    border-radius:var(--radius-sm);
-    cursor:pointer;
-}
-
-.btn-back:hover{
-    background:var(--bg);
-}
-
-.header-titles{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-}
-
-.header-title{
-    font-size:15px;
-    font-weight:700;
-}
-
-.header-sub{
-    font-size:11px;
-    color:var(--text-sub);
-}
-
-/* ───────────────────────────────────────────── */
-/* MAPA */
-/* ───────────────────────────────────────────── */
-/* ── MAPA PAGE ── */
-
-/* Toggle de vista en header */
-.vista-toggle {
-  display: flex;
-  gap: 4px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  flex-shrink: 0;
-}
-
-.vista-btn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-mid);
-  text-decoration: none;
-  transition: background .15s, color .15s;
-  font-family: var(--font);
-}
-.vista-btn:hover {
-  background: var(--surface);
-  color: var(--text);
-}
-.vista-btn--active {
-  background: var(--accent);
-  color: #fff;
-}
-.vista-btn--active:hover {
-  background: var(--accent-mid);
-  color: #fff;
-}
+/* ══════════════════════════════════════════
+   MAPA.CSS — solo estilos específicos
+   de mapa.html.
+   Requiere base.css cargado antes.
+   ══════════════════════════════════════════ */
 
 /* Barra de filtros sobre el mapa */
 .mapa-filtros {
@@ -278,7 +135,7 @@ body{
   padding: 9px 12px;
   border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
-  background: #F8FAFC;
+  background: var(--bg-subtle);
   cursor: pointer;
   font-family: var(--font);
   margin-bottom: 0;
@@ -331,8 +188,8 @@ body{
 }
 .panel-metodos-tabla tbody tr { border-bottom: 1px solid var(--border); }
 .panel-metodos-tabla tbody tr:last-child { border-bottom: none; }
-.panel-metodos-tabla tbody tr:nth-child(even) { background: #F8FAFC; }
-.panel-metodos-tabla tbody tr:nth-child(odd)  { background: #fff; }
+.panel-metodos-tabla tbody tr:nth-child(even) { background: var(--bg-subtle); }
+.panel-metodos-tabla tbody tr:nth-child(odd)  { background: var(--surface); }
 .panel-metodo-codigo {
   padding: 7px 10px;
   font-weight: 700;
@@ -375,20 +232,6 @@ body{
   transition: background .15s;
 }
 .btn-llegar:hover { background: var(--accent-light); }
-
-/* Marcador personalizado */
-.marker-pin {
-  width: 32px;
-  height: 32px;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,.2);
-}
-.marker-pin--acreditado  { background: var(--accent); border: 2px solid #fff; }
-.marker-pin--no_acreditado { background: #9CA3AF; border: 2px solid #fff; }
 
 /* Popup de Leaflet */
 .leaflet-popup-content-wrapper {
@@ -503,26 +346,4 @@ body{
   padding: 5px 10px;
   margin-bottom: 10px;
   display: inline-block;
-}
-
-/* ── MODO OSCURO ── */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:           #111827;
-    --surface:      #1F2937;
-    --border:       #374151;
-    --border-focus: #26A69A;
-
-    --text:         #F9FAFB;
-    --text-mid:     #D1D5DB;
-    --text-sub:     #6B7280;
-
-    --accent-light: rgba(0,137,123,.18);
-    --blue-light:   rgba(21,101,192,.18);
-    --warning-light:rgba(245,158,11,.15);
-    --danger-light: rgba(239,68,68,.15);
-
-    --shadow-sm:    0 1px 3px rgba(0,0,0,.3), 0 1px 2px rgba(0,0,0,.2);
-    --shadow-md:    0 4px 12px rgba(0,0,0,.4);
-  }
 }

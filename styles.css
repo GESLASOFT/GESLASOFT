@@ -670,7 +670,7 @@ img {
 
 .directory-content .button-primary {
   color: var(--primary-dark);
-  background: var(--white);
+  background: #FFFFFF;
 }
 
 .update-note {

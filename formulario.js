@@ -12,10 +12,10 @@ const HEADERS = {
 
 // ── ICONOS POR DISCIPLINA ──
 const iconoDisc = {
-  Suelos:    '🪨',
+  Suelos:    '🟫',
   Concreto:  '🏗️',
-  Roca:      '⛰️',
-  Quimicos:  '🧪',
+  Rocas:      '⛰️',
+  Químicos:  '🧪',
   Agregados: '🔩',
   Otros:     '🔬',
 };
@@ -24,6 +24,46 @@ const iconoDisc = {
 let items         = [];
 let ensayosDelLab = [];
 let labActual     = null;
+
+// ── KEY LOCALSTORAGE: DATOS RECURRENTES ──
+const KEY_DATOS_RECURRENTES = 'geslasoft_datos_recurrentes';
+
+// ── PRECARGAR DATOS GUARDADOS (si el usuario eligió "recordar") ──
+function precargarDatosRecurrentes() {
+  const guardado = localStorage.getItem(KEY_DATOS_RECURRENTES);
+  if (!guardado) return;
+  try {
+    const datos = JSON.parse(guardado);
+    document.getElementById('empresa').value      = datos.empresa      || '';
+    document.getElementById('rucDni').value        = datos.rucDni       || '';
+    document.getElementById('direccion').value     = datos.direccion    || '';
+    document.getElementById('nombre').value        = datos.nombre       || '';
+    document.getElementById('cargo').value          = datos.cargo        || '';
+    document.getElementById('telefono').value      = datos.telefono     || '';
+    document.getElementById('email').value          = datos.email        || '';
+    document.getElementById('recordarDatos').checked = true;
+  } catch (_) {
+    localStorage.removeItem(KEY_DATOS_RECURRENTES);
+  }
+}
+
+// ── GUARDAR O BORRAR DATOS RECURRENTES SEGÚN CHECKBOX ──
+function manejarDatosRecurrentes() {
+  const recordar = document.getElementById('recordarDatos').checked;
+  if (recordar) {
+    localStorage.setItem(KEY_DATOS_RECURRENTES, JSON.stringify({
+      empresa:   document.getElementById('empresa').value.trim(),
+      rucDni:    document.getElementById('rucDni').value.trim(),
+      direccion: document.getElementById('direccion').value.trim(),
+      nombre:    document.getElementById('nombre').value.trim(),
+      cargo:     document.getElementById('cargo').value.trim(),
+      telefono:  document.getElementById('telefono').value.trim(),
+      email:     document.getElementById('email').value.trim(),
+    }));
+  } else {
+    localStorage.removeItem(KEY_DATOS_RECURRENTES);
+  }
+}
 
 // ── DOM ──
 const disciplinaSelect = document.getElementById('disciplina');
@@ -53,7 +93,7 @@ async function sbFetch(path, options = {}) {
 async function cargarEnsayos(laboratorio_id) {
   if (!laboratorio_id) return;
   const data = await sbFetch(
-    `laboratorio_metodos?laboratorio_id=eq.${laboratorio_id}&activo=eq.true&select=metodo_id,version_astm,version_ntp,version_iso,version_aashto,metodos(id,disciplina,codigo,codigo_ntp,codigo_iso,codigo_aashto,descripcion)&order=metodos(disciplina).asc`
+    `laboratorio_metodos?laboratorio_id=eq.${laboratorio_id}&activo=eq.true&select=metodo_id,version_astm,version_ntp,version_iso,version_aashto,metodos(id,disciplina,codigo,codigo_ntp,codigo_iso,codigo_aashto,descripcion)&order=metodos(id).asc`
   );
   ensayosDelLab = data.map(row => ({
     disciplina:    row.metodos.disciplina,
@@ -72,7 +112,15 @@ async function cargarEnsayos(laboratorio_id) {
 
 // ── MAPA ENSAYO → DISCIPLINA ──
 function poblarDisciplinas(ensayos) {
-  const disciplinas = [...new Set(ensayos.map(e => e.disciplina))].sort();
+  const ordenDisc = ['Suelos', 'Agregados', 'Rocas', 'Concreto', 'Químicos'];
+  const disciplinas = [...new Set(ensayos.map(e => e.disciplina))]
+    .sort((a, b) => {
+      const ia = ordenDisc.indexOf(a);
+      const ib = ordenDisc.indexOf(b);
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
   disciplinaSelect.innerHTML = '<option value="">Seleccionar disciplina</option>';
   disciplinas.forEach(d => {
     const opt = document.createElement('option');
@@ -381,6 +429,7 @@ async function enviarSolicitud() {
       `Registrada correctamente con el número <strong>${nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
     modalOverlay.classList.remove('hidden');
     localStorage.removeItem('geslasoft_borrador');
+    manejarDatosRecurrentes();
 
   } catch (err) {
     console.error(err);
@@ -420,18 +469,27 @@ btnModalAceptar.addEventListener('click', () => {
 window.addEventListener('DOMContentLoaded', async () => {
   const labGuardado = localStorage.getItem('geslasoft_lab');
     console.log('labGuardado:', labGuardado);
+
+
+
+
+
     if (labGuardado) {
       labActual = JSON.parse(labGuardado);
-      console.log('labActual:', labActual);
 
       document.querySelector('.lab-name').textContent     = labActual.nombre    || 'Laboratorio';
       document.querySelector('.lab-location').textContent = labActual.ubicacion || '';
-      document.querySelector('.lab-label').textContent    = labActual.codigo    
+      document.querySelector('.lab-label').textContent    = labActual.codigo
         ? `LABORATORIO · ${labActual.codigo}`
         : 'LABORATORIO SELECCIONADO';
 
+      // ── LOGO ──
+      const labIcon = document.querySelector('.lab-icon');
+      if (labActual.logo_url) {
+        labIcon.innerHTML = `<img src="${labActual.logo_url}" alt="${labActual.nombre}" />`;
+      }
+
       await cargarEnsayos(labActual.id);
-      console.log('ensayosDelLab:', ensayosDelLab);
     }
   
   else {
@@ -439,7 +497,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-
+  precargarDatosRecurrentes();
 });
 
 // ── VOLVER A SELECCIONAR LABORATORIO ──
@@ -474,4 +532,3 @@ function mostrarToast(msg, tipo = 'accent') {
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
-

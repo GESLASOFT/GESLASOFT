@@ -259,7 +259,17 @@ function crearCard(lab, idx) {
         }
       </div>
       <div class="lab-card-info">
-        <div class="lab-card-name">${lab.nombre}</div>
+
+        <div class="lab-card-name">
+          ${lab.website
+            ? `<a href="${lab.website}" target="_blank" rel="noopener noreferrer"
+                  style="color:inherit; text-decoration:none; cursor:pointer;"
+                  onmouseover="this.style.opacity='0.7'"
+                  onmouseout="this.style.opacity='1'"
+                  title="Visitar sitio web">${lab.nombre}</a>`
+            : lab.nombre
+          }
+        </div>
         <div class="lab-card-location">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2.5"
@@ -338,6 +348,7 @@ function crearCard(lab, idx) {
       codigo:          lab.codigo, 
       nombre:          lab.nombre,
       ubicacion:       [lab.distrito, lab.provincia].filter(Boolean).join(', '),
+      logo_url:        lab.logo_url || null,  
     }));
     window.location.href = 'formulario.html';
   });
