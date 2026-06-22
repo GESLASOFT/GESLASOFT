@@ -1,0 +1,410 @@
+/* ══════════════════════════════════════════
+   LABORATORIOS.CSS — solo estilos específicos
+   de laboratorios.html.
+   Requiere base.css cargado antes.
+   ══════════════════════════════════════════ */
+
+.step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* Select deshabilitado */
+select:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* Resultados header */
+.resultados-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+/* Estados */
+.estado-cargando,
+.estado-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--text-sub);
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Spinner */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LAB CARD ── */
+.lab-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-bottom: 12px;
+  transition: box-shadow .2s, transform .15s;
+  animation: cardIn .25s ease both;
+}
+.lab-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lab-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.lab-card-icon {
+  width: 100px;
+  min-height: 64px;
+  align-self: stretch;
+  border-radius: 6px;
+  background: var(--accent-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+  overflow: hidden;
+  margin: -10px 4px -6px -12px;
+}
+.lab-card-info { flex: 1; }
+
+.lab-card-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 3px;
+}
+
+.lab-card-location {
+  font-size: 11px;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lab-card-body {
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Botón cotizar */
+.lab-card-footer {
+  padding: 0 16px 14px;
+}
+
+.btn-cotizar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, box-shadow .15s;
+  box-shadow: 0 2px 6px rgba(0,137,123,.2);
+}
+.btn-cotizar:hover {
+  background: var(--accent-mid);
+  box-shadow: 0 4px 10px rgba(0,137,123,.3);
+}
+
+.lab-card-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 2px;
+}
+
+/* ── BOTÓN COLAPSABLE DE MÉTODOS ── */
+.btn-metodos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border);
+  background: var(--bg-subtle);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: border-color .15s, background .15s;
+}
+.btn-metodos:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+.btn-metodos--open {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.btn-metodos--empty {
+  cursor: default;
+  opacity: .6;
+}
+.btn-metodos--empty:hover {
+  border-color: var(--border);
+  background: var(--bg-subtle);
+}
+
+.btn-metodos-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+.btn-metodos--open .btn-metodos-label { color: var(--accent); }
+
+.btn-metodos-icon {
+  flex-shrink: 0;
+  color: var(--text-sub);
+}
+.btn-metodos--open .btn-metodos-icon { color: var(--accent); }
+
+.btn-metodos-chevron {
+  flex-shrink: 0;
+  color: var(--text-sub);
+  transition: transform .2s ease;
+}
+.btn-metodos--open .btn-metodos-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* ── PANEL DESPLEGABLE ── */
+.metodos-panel {
+  display: none;
+  border: 1.5px solid var(--accent);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-sm);
+  border-bottom-right-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.metodos-panel--open { display: block; }
+
+/* ── TABLA DE MÉTODOS ── */
+.metodos-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.metodos-tabla tbody tr { border-bottom: 1px solid var(--border); }
+.metodos-tabla tbody tr:last-child { border-bottom: none; }
+.metodos-tabla tbody tr:nth-child(even) { background: var(--bg-subtle); }
+.metodos-tabla tbody tr:nth-child(odd)  { background: var(--surface); }
+.metodo-row--highlight .metodo-codigo,
+.metodo-row--highlight .metodo-desc {
+  background: var(--accent-light) !important;
+}
+
+.metodo-codigo {
+  padding: 7px 12px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+  width: 1%;
+  vertical-align: middle;
+}
+.metodo-desc {
+  padding: 7px 12px 7px 0;
+  color: var(--text-mid);
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+/* ── BADGES DE ESTADO ── */
+
+.lab-badge-acreditado {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid rgba(0,137,123,.2);
+  border-radius: 20px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.lab-badge-no-acreditado {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-sub);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.lab-badge-suspendido {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--warning);
+  background: var(--warning-light);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: 20px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+.lab-badge-en-proceso {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--blue);
+  background: var(--blue-light);
+  border: 1px solid rgba(21,101,192,.2);
+  border-radius: 20px;
+  padding: 3px 8px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* ══════════════════════════════════════════
+   ACORDEÓN DE FILTROS
+   ══════════════════════════════════════════ */
+
+.filtros-activos-badge {
+  margin-left: auto;
+  margin-right: 4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acordeon-item {
+  border-top: 1px solid var(--border);
+}
+.acordeon-item:first-of-type {
+  border-top: none;
+}
+
+.acordeon-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  text-align: left;
+  transition: background .12s;
+}
+.acordeon-header:hover {
+  background: var(--bg);
+}
+
+.acordeon-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+  flex: 1;
+}
+
+.acordeon-indicador {
+  font-size: 10px;
+  color: var(--accent);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.acordeon-chevron {
+  flex-shrink: 0;
+  color: var(--text-sub);
+  transition: transform .2s ease;
+}
+
+/* Cuerpo: oculto por defecto */
+.acordeon-body {
+  display: none;
+  padding: 4px 16px 16px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Abierto */
+.acordeon-item--open .acordeon-body {
+  display: flex;
+}
+.acordeon-item--open .acordeon-chevron {
+  transform: rotate(180deg);
+}
+.acordeon-item--open .acordeon-titulo {
+  color: var(--text);
+}

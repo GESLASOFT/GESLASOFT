@@ -1,0 +1,388 @@
+/* ══════════════════════════════════════════
+   PANEL_LAB.CSS
+   Estilos específicos del panel del laboratorio
+   Requiere base.css cargado antes
+   ══════════════════════════════════════════ */
+
+/* ── LAYOUT GENERAL ── */
+.panel-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.panel-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+
+}
+
+.panel-header-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent-light);
+  border: 1px solid rgba(0,137,123,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.panel-header-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.panel-header-logo svg {
+  color: var(--accent);
+}
+
+.panel-brand-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+}
+
+.panel-brand-sub {
+  font-size: 10px;
+  color: var(--text-sub);
+  letter-spacing: 0.5px;
+}
+
+.panel-header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.panel-lab-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-lab-nombre {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-lab-ubicacion {
+  font-size: 11px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.panel-usuario-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.panel-usuario-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.panel-usuario-nombre {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.panel-usuario-rol {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.btn-salir {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--text-mid);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+  text-decoration: none;
+}
+.btn-salir:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+/* ── CONTENIDO PRINCIPAL ── */
+.panel-content {
+  flex: 1;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── BIENVENIDA ── */
+.panel-bienvenida {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.bienvenida-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bienvenida-saludo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.bienvenida-saludo span {
+  color: var(--accent);
+}
+
+.bienvenida-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.bienvenida-fecha {
+  font-size: 12px;
+  color: var(--text-sub);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.bienvenida-fecha strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text-mid);
+  font-weight: 600;
+}
+
+/* ── SECCIÓN MÓDULOS ── */
+.modulos-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modulos-area-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.modulos-area-label::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.modulos-area-label span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.modulos-area-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Colores por área */
+.area-comercial  { color: #1565C0; }
+.area-tecnica    { color: #00897B; }
+.area-recursos   { color: #F59E0B; }
+.area-calidad    { color: #7C3AED; }
+.area-sistema    { color: #0284C7; }
+.area-requerimientos { color: #F59E0B; }
+
+/* ── GRID DE MÓDULOS ── */
+.modulos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+/* ── CARD DE MÓDULO ── */
+.modulo-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 14px;
+  cursor: pointer;
+  transition: box-shadow .18s, border-color .18s, transform .15s;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.modulo-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.modulo-card:active {
+  transform: translateY(0);
+}
+
+.modulo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modulo-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.modulo-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.modulo-sub {
+  font-size: 10px;
+  color: var(--text-sub);
+  line-height: 1.3;
+}
+
+/* ── TOAST "EN DESARROLLO" ── */
+.toast-dev {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+  opacity: 0;
+  transition: opacity .2s, transform .2s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 9999;
+}
+.toast-dev.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── ESTADO CARGANDO ── */
+.panel-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.panel-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .panel-header { padding: 0 14px; }
+  .panel-usuario-badge { display: none; }
+  .bienvenida-fecha { display: none; }
+  .modulos-grid { grid-template-columns: repeat(2, 1fr); }
+  .panel-bienvenida { padding: 16px; }
+  .bienvenida-saludo { font-size: 17px; }
+}

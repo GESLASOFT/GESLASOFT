@@ -1,0 +1,462 @@
+/* ══════════════════════════════════════════
+   MIS_SOLICITUDES.CSS
+   Estilos específicos para mis_solicitudes.html
+   Requiere base.css cargado antes
+   ══════════════════════════════════════════ */
+
+/* ── LAYOUT ── */
+.mis-sol-page {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ── */
+.mis-sol-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 0 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mis-sol-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.mis-sol-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--accent-light);
+  border: 1px solid rgba(0,137,123,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mis-sol-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mis-sol-logo svg { color: var(--accent); }
+
+.mis-sol-brand-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 1.5px;
+}
+
+.mis-sol-brand-sub {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.mis-sol-header-divider {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.mis-sol-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.mis-sol-usuario-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.mis-sol-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mis-sol-usuario-nombre {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.mis-sol-usuario-rol {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.btn-salir-sol {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font);
+  color: var(--text-mid);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-salir-sol:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: var(--danger-light);
+}
+
+/* ── CONTENIDO ── */
+.mis-sol-content {
+  flex: 1;
+  max-width: 680px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── BIENVENIDA ── */
+.mis-sol-bienvenida {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.bienvenida-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bienvenida-saludo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.bienvenida-saludo span { color: var(--accent); }
+
+.bienvenida-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+}
+
+.btn-nueva-sol {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  color: #fff;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s;
+  box-shadow: 0 2px 8px rgba(0,137,123,.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.btn-nueva-sol:hover {
+  background: var(--accent-mid);
+  box-shadow: 0 4px 12px rgba(0,137,123,.35);
+}
+
+/* ── SECCIÓN SOLICITUDES ── */
+.mis-sol-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mis-sol-seccion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mis-sol-seccion-titulo {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-mid);
+}
+
+.mis-sol-count {
+  font-size: 11px;
+  color: var(--text-sub);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* ── CARD DE SOLICITUD ── */
+.sol-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow .2s;
+  cursor: pointer;
+}
+.sol-card:hover { box-shadow: var(--shadow-md); }
+
+.sol-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 28px;
+}
+
+.sol-card-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.sol-nro {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: monospace;
+}
+
+.sol-lab {
+  font-size: 12px;
+  color: var(--text-mid);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sol-fecha {
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+/* ── BADGES DE ESTADO ── */
+.sol-estado {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.estado-nueva            { background: var(--blue-light);    color: var(--blue);    }
+.estado-en_cotizacion    { background: var(--warning-light);  color: #B45309;        }
+.estado-aceptada         { background: var(--accent-light);   color: var(--accent);  }
+.estado-rechazada        { background: var(--danger-light);   color: var(--danger);  }
+.estado-modificacion_solicitada { background: #FEF3C7; color: #92400E; }
+
+.sol-card-bottom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+    cursor: pointer;
+  user-select: none;
+}
+.sol-card-bottom:hover { opacity: .75; }
+
+
+.sol-ensayos-count {
+  font-size: 11px;
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── ESTADO VACÍO ── */
+.mis-sol-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: var(--text-sub);
+  text-align: center;
+}
+
+.mis-sol-vacio p {
+  font-size: 14px;
+}
+
+.mis-sol-vacio span {
+  font-size: 12px;
+}
+
+/* ── CARGANDO ── */
+.mis-sol-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 20px;
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.mis-sol-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 480px) {
+  .mis-sol-header { padding: 0 14px; }
+  .mis-sol-usuario-badge { display: none; }
+  .mis-sol-bienvenida { flex-direction: column; align-items: flex-start; }
+  .btn-nueva-sol { width: 100%; justify-content: center; }
+  .bienvenida-saludo { font-size: 17px; }
+}
+
+/* ── CLICKEABLE: SOLO EL CONTADOR DE ENSAYOS ── */
+.sol-card {
+  cursor: default; /* la card ya no es clickeable entera */
+}
+
+.sol-ensayos-count {
+  transition: color .15s;
+}
+.sol-ensayos-count:hover { color: var(--accent); }
+
+.sol-ensayos-arrow {
+  transition: transform .2s;
+  margin-left: 2px;
+}
+.sol-ensayos-count.abierto .sol-ensayos-arrow {
+  transform: rotate(180deg);
+}
+
+/* ── DETALLE DE ENSAYOS (desplegable) ── */
+.sol-ensayos-detalle {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+}
+.sol-ensayos-detalle.abierto {
+  display: flex;
+}
+
+.sol-ensayo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  padding: 6px 8px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+
+.sol-ensayo-norma {
+  font-family: monospace;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sol-ensayo-nombre {
+  color: var(--text-mid);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sol-ensayo-cant {
+  font-weight: 700;
+  color: var(--text-sub);
+  flex-shrink: 0;
+}
+
+/* ── LOGO DEL LABORATORIO EN CARD ── */
+.sol-card-top {
+  align-items: flex-start;
+}
+
+.sol-lab-logo {
+  width: 70px;
+  height: 70px;
+  border-radius: 20px;
+  background: var(--accent-light);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.sol-lab-ubicacion {
+  font-size: 10px;
+  color: var(--text-sub);
+}
+
+.sol-lab-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
