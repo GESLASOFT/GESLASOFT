@@ -4,8 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Iniciar sesión · GESLASOFT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/login.css" />
+  <link rel="stylesheet" href="login.css">
+
 </head>
 <body>
 
@@ -125,6 +130,17 @@
     </div>
   </div>
 
+  <!-- ENLACE SUTIL A LANDING -->
+  <a href="landing.html" class="landing-link" title="Conocer GESLASOFT">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    Conocer GESLASOFT
+  </a>
+
   <script>
     // ── CONFIGURACIÓN SUPABASE ──
     const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
@@ -136,7 +152,6 @@
       'Content-Type':  'application/json',
     };
 
-    // ── DOM ──
     const inputEmail    = document.getElementById('email');
     const inputPassword = document.getElementById('password');
     const btnLogin      = document.getElementById('btnLogin');
@@ -148,7 +163,6 @@
     const btnTogglePass = document.getElementById('btnTogglePass');
     const iconOjo       = document.getElementById('iconOjo');
 
-    // ── TOGGLE CONTRASEÑA ──
     btnTogglePass.addEventListener('click', () => {
       const esPassword = inputPassword.type === 'password';
       inputPassword.type = esPassword ? 'text' : 'password';
@@ -162,7 +176,6 @@
            <circle cx="12" cy="12" r="3"/>`;
     });
 
-    // ── LIMPIAR ERRORES AL ESCRIBIR ──
     inputEmail.addEventListener('input', () => {
       inputEmail.classList.remove('invalid');
       emailError.classList.remove('visible');
@@ -174,7 +187,6 @@
       loginError.classList.remove('visible');
     });
 
-    // ── ENTER para ingresar ──
     inputPassword.addEventListener('keydown', e => {
       if (e.key === 'Enter') iniciarSesion();
     });
@@ -182,7 +194,6 @@
       if (e.key === 'Enter') inputPassword.focus();
     });
 
-    // ── VALIDACIÓN ──
     function validar() {
       let ok = true;
       const email = inputEmail.value.trim();
@@ -201,26 +212,22 @@
       return ok;
     }
 
-    // ── MOSTRAR ERROR GLOBAL ──
     function mostrarError(msg) {
       loginErrorMsg.textContent = msg;
       loginError.classList.add('visible');
     }
 
-    // ── LOADING STATE ──
     function setLoading(loading) {
       btnLogin.disabled = loading;
       btnLogin.classList.toggle('loading', loading);
     }
 
-    // ── INICIAR SESIÓN ──
     async function iniciarSesion() {
       if (!validar()) return;
       setLoading(true);
       loginError.classList.remove('visible');
 
       try {
-        // 1. Autenticar con Supabase Auth
         const authRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
           method: 'POST',
           headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
@@ -239,13 +246,10 @@
         const token   = authData.access_token;
         const user_id = authData.user.id;
 
-        // Guardar token en sessionStorage
         sessionStorage.setItem('geslasoft_token',   token);
         sessionStorage.setItem('geslasoft_user_id', user_id);
 
-        // 2. Buscar perfil del usuario en tabla usuarios
         const usuarioRes = await fetch(
-
           `${SUPABASE_URL}/rest/v1/usuarios?id=eq.${user_id}&select=id,nombre_completo,nombre_corto,organizacion_id,laboratorio_id,rol_id,es_superadmin_geslasoft,activo,roles(codigo,nombre)`,
           { headers: { ...HEADERS, 'Authorization': `Bearer ${token}` } }
         );
@@ -263,11 +267,9 @@
           return;
         }
 
-        // Guardar datos de sesión
         sessionStorage.setItem('geslasoft_usuario', JSON.stringify(usuario));
 
-        // 3. Redirigir según rol
-        const rolCodigo = usuario.roles?.codigo || '';
+        const rolCodigo    = usuario.roles?.codigo || '';
         const esSuperadmin = usuario.es_superadmin_geslasoft;
 
         if (esSuperadmin || rolCodigo !== 'cliente_externo') {
@@ -284,7 +286,6 @@
       }
     }
 
-    // ── CLICK BOTÓN ──
     btnLogin.addEventListener('click', iniciarSesion);
   </script>
 

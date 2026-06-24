@@ -103,6 +103,27 @@
 <!-- TOAST EN DESARROLLO -->
 <div class="toast-dev" id="toastDev">Módulo en desarrollo</div>
 
+<!-- ── MODAL CONFIRMAR SALIDA ── -->
+<div class="modal-salir-overlay" id="modalSalirOverlay">
+  <div class="modal-salir">
+    <div class="modal-salir-icono">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <div class="modal-salir-titulo">¿Cerrar sesión?</div>
+    <div class="modal-salir-desc">Serás redirigido al inicio de sesión y deberás volver a ingresar.</div>
+    <div class="modal-salir-acciones">
+      <button class="btn-modal-cancelar" id="btnModalCancelar">Cancelar</button>
+      <button class="btn-modal-salir"    id="btnModalConfirmar">Sí, salir</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // ── CONFIGURACIÓN ──
   const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
@@ -157,6 +178,38 @@
     toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
   }
 
+  // ── MODAL SALIR ──
+  const overlay        = document.getElementById('modalSalirOverlay');
+  const btnCancelar    = document.getElementById('btnModalCancelar');
+  const btnConfirmar   = document.getElementById('btnModalConfirmar');
+
+  function abrirModalSalir()  { overlay.classList.add('visible'); }
+  function cerrarModalSalir() { overlay.classList.remove('visible'); }
+
+  function ejecutarSalida() {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  // Abrir al hacer clic en "Salir"
+  document.getElementById('btnSalir').addEventListener('click', abrirModalSalir);
+
+  // Cancelar
+  btnCancelar.addEventListener('click', cerrarModalSalir);
+
+  // Confirmar salida
+  btnConfirmar.addEventListener('click', ejecutarSalida);
+
+  // Clic fuera del modal
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) cerrarModalSalir();
+  });
+
+  // Tecla Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarModalSalir();
+  });
+
   // ── FECHA Y HORA ──
   function actualizarFecha() {
     const ahora = new Date();
@@ -171,7 +224,6 @@
     const seccion = document.getElementById('modulosSeccion');
     seccion.innerHTML = '';
 
-    // Filtrar módulos que el usuario puede ver
     const modulosVisibles = MODULOS_CONFIG.filter(m => permisosIds.includes(m.id));
 
     if (modulosVisibles.length === 0) {
@@ -179,14 +231,12 @@
       return;
     }
 
-    // Agrupar por área
     const porArea = {};
     modulosVisibles.forEach(m => {
       if (!porArea[m.area]) porArea[m.area] = [];
       porArea[m.area].push(m);
     });
 
-    // Renderizar por área en orden
     const ordenAreas = ['comercial', 'tecnica', 'recursos', 'calidad', 'sistema'];
     ordenAreas.forEach(area => {
       if (!porArea[area]) return;
@@ -194,13 +244,11 @@
 
       const areaDiv = document.createElement('div');
 
-      // Label del área
       const label = document.createElement('div');
       label.className = `modulos-area-label ${cfg.clase}`;
       label.innerHTML = `<span>${cfg.label.toUpperCase()}</span>`;
       areaDiv.appendChild(label);
 
-      // Grid de módulos
       const grid = document.createElement('div');
       grid.className = 'modulos-grid';
 
@@ -217,7 +265,13 @@
           </div>
         `;
         card.style.borderTop = `3px solid ${m.color}20`;
-        card.addEventListener('click', () => mostrarToast(`${m.titulo} — en desarrollo`));
+        card.addEventListener('click', () => {
+          if (m.id === 'comercial.requerimiento') {
+            window.location.href = 'requerimiento.html';
+          } else {
+            mostrarToast(`${m.titulo} — en desarrollo`);
+          }
+        });
         grid.appendChild(card);
       });
 
@@ -228,8 +282,7 @@
 
   // ── INIT ──
   async function init() {
-    // Verificar sesión
-    const token   = sessionStorage.getItem('geslasoft_token');
+    const token      = sessionStorage.getItem('geslasoft_token');
     const usuarioStr = sessionStorage.getItem('geslasoft_usuario');
 
     if (!token || !usuarioStr) {
@@ -239,7 +292,6 @@
 
     const usuario = JSON.parse(usuarioStr);
 
-    // Verificar que no sea cliente externo
     const rolCodigo = usuario.roles?.codigo || '';
     if (rolCodigo === 'cliente_externo') {
       window.location.href = 'mis_solicitudes.html';
@@ -247,63 +299,40 @@
     }
 
     try {
-      // Cargar datos del laboratorio
       const labRes = await fetch(
         `${SUPABASE_URL}/rest/v1/laboratorios?id=eq.${usuario.laboratorio_id}&select=nombre,codigo,distrito,provincia`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${token}`,
-          }
-        }
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
       );
       const labs = await labRes.json();
       const lab  = labs[0] || {};
 
-      // Cargar permisos
       const permisosRes = await fetch(
         `${SUPABASE_URL}/rest/v1/permisos_rol?rol_id=eq.${usuario.rol_id}&puede_ver=eq.true&select=modulos(codigo)`,
-        {
-          headers: {
-            'apikey': SUPABASE_ANON,
-            'Authorization': `Bearer ${token}`,
-          }
-        }
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
       );
-      const permisos = await permisosRes.json();
+      const permisos    = await permisosRes.json();
       const permisosIds = permisos.map(p => p.modulos?.codigo).filter(Boolean);
 
-      // Si es superadmin ve todo
-      const rolCodigo = usuario.roles?.codigo || '';
       const esSuperadmin = usuario.es_superadmin_geslasoft || rolCodigo === 'superadmin_lab';
-      const modulosIds = esSuperadmin
-        ? MODULOS_CONFIG.map(m => m.id)
-        : permisosIds;
+      const modulosIds   = esSuperadmin ? MODULOS_CONFIG.map(m => m.id) : permisosIds;
 
-      // Poblar header
       const nombreCorto = usuario.nombre_corto || usuario.nombre_completo?.split(' ')[0] || '—';
       const ubicacion   = [lab.distrito, lab.provincia].filter(Boolean).join(', ');
 
-      document.getElementById('headerLabNombre').textContent    = lab.nombre    || 'Laboratorio';
-      document.getElementById('headerLabUbicacion').textContent = ubicacion     || '';
+      document.getElementById('headerLabNombre').textContent    = lab.nombre || 'Laboratorio';
+      document.getElementById('headerLabUbicacion').textContent = ubicacion  || '';
       document.getElementById('usuarioNombre').textContent      = nombreCorto;
       document.getElementById('usuarioRol').textContent         = usuario.roles?.nombre || '—';
       document.getElementById('usuarioAvatar').textContent      = (usuario.nombre_completo || '?')[0].toUpperCase();
+      document.getElementById('bienvenidaNombre').textContent   = nombreCorto;
+      document.getElementById('bienvenidaLab').textContent      = lab.nombre || '—';
 
-      // Poblar bienvenida
-      document.getElementById('bienvenidaNombre').textContent = nombreCorto;
-      document.getElementById('bienvenidaLab').textContent    = lab.nombre || '—';
-
-      // Fecha y hora
       actualizarFecha();
       setInterval(actualizarFecha, 60000);
-
-      // Renderizar módulos
       renderModulos(modulosIds);
 
-      // Mostrar contenido
-      document.getElementById('estadoCargando').style.display  = 'none';
-      document.getElementById('panelContenido').style.display  = 'flex';
+      document.getElementById('estadoCargando').style.display = 'none';
+      document.getElementById('panelContenido').style.display = 'flex';
 
     } catch (err) {
       console.error(err);
@@ -312,13 +341,6 @@
     }
   }
 
-  // ── SALIR ──
-  document.getElementById('btnSalir').addEventListener('click', () => {
-    sessionStorage.clear();
-    window.location.href = 'login.html';
-  });
-
-  // ── ARRANCAR ──
   init();
 </script>
 

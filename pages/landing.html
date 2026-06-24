@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta
+    name="description"
+    content="GESLASOFT: software de gestión para laboratorios de ensayo y directorio gratuito de laboratorios acreditados."
+  />
+  <title>GESLASOFT | Software para laboratorios de ensayo</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label="Ir al inicio">
+        <span class="brand-icon" aria-hidden="true">G</span>
+        <span class="brand-text">
+          <strong>GESLASOFT</strong>
+          <small>LIMS · ISO/IEC 17025</small>
+        </span>
+      </a>
+
+      <button
+        class="menu-button"
+        id="menuButton"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mainNavigation"
+        aria-label="Abrir menú de navegación"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="main-navigation" id="mainNavigation" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#funcionalidades">Funcionalidades</a>
+        <a href="#directorio">Directorio gratuito</a>
+        <a href="#nosotros">Nosotros</a>
+        <a class="nav-cta" href="#contacto">Solicitar demostración</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="section directory-section" id="directorio">
+      <div class="container">
+        <div class="directory-card">
+          <div class="directory-content">
+            <span class="free-label">Servicio gratuito</span>
+
+            <h2>Directorio de laboratorios acreditados</h2>
+
+            <p>
+              Consulta laboratorios de ensayo acreditados por INACAL según tipo
+              de servicio, ubicación o alcance de acreditación.
+            </p>
+
+            <div class="directory-actions">
+              <a class="button button-primary" href="../pages/login.html" id="directoryButton">
+                Consultar el directorio
+              </a>
+              <span class="update-note">Información referencial de fuente pública</span>
+            </div>
+          </div>
+
+          <aside class="directory-info" aria-label="Información del directorio">
+            <div class="inacal-placeholder">
+              <strong>INACAL</strong>
+              <span>Laboratorios acreditados</span>
+            </div>
+
+            <p>
+              GESLASOFT es una plataforma independiente y no representa a INACAL.
+              La información debe verificarse en los canales oficiales.
+            </p>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero" id="inicio">
+      <div class="container hero-grid">
+        <div class="hero-content">
+          <span class="eyebrow">Software especializado para laboratorios de ensayo</span>
+
+          <h1>
+            Gestiona tu laboratorio con mayor
+            <span>orden, trazabilidad y control</span>
+          </h1>
+
+          <p class="hero-description">
+            Centraliza muestras, resultados, informes, clientes y documentos en
+            una plataforma diseñada para optimizar los procesos del laboratorio
+            y apoyar la gestión relacionada con la norma ISO/IEC 17025.
+          </p>
+
+          <div class="hero-actions">
+            <a class="button button-primary" href="#contacto">
+              Solicitar una demostración
+            </a>
+            <a class="button button-secondary" href="#funcionalidades">
+              Ver funcionalidades
+            </a>
+          </div>
+
+          <div class="hero-highlights" aria-label="Principales beneficios">
+            <div>
+              <strong>100 % digital</strong>
+              <span>Menos registros manuales</span>
+            </div>
+            <div>
+              <strong>Trazabilidad</strong>
+              <span>Seguimiento de cada muestra</span>
+            </div>
+            <div>
+              <strong>Acceso seguro</strong>
+              <span>Usuarios y permisos</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual" aria-label="Vista ilustrativa del sistema">
+          <div class="dashboard-card">
+            <div class="dashboard-topbar">
+              <span class="dashboard-logo">G</span>
+              <div>
+                <strong>Panel de laboratorio</strong>
+                <small>Resumen de operaciones</small>
+              </div>
+              <span class="status-dot" title="Sistema activo"></span>
+            </div>
+
+            <div class="dashboard-stats">
+              <article>
+                <small>Muestras activas</small>
+                <strong>128</strong>
+                <span>+12 esta semana</span>
+              </article>
+              <article>
+                <small>Informes emitidos</small>
+                <strong>84</strong>
+                <span>96 % completados</span>
+              </article>
+            </div>
+
+            <div class="dashboard-table">
+              <div class="table-header">
+                <span>Código</span>
+                <span>Ensayo</span>
+                <span>Estado</span>
+              </div>
+              <div class="table-row">
+                <span>MT-1042</span>
+                <span>Fisicoquímico</span>
+                <span class="tag tag-progress">En proceso</span>
+              </div>
+              <div class="table-row">
+                <span>AG-0831</span>
+                <span>Microbiológico</span>
+                <span class="tag tag-ready">Validado</span>
+              </div>
+              <div class="table-row">
+                <span>AL-0628</span>
+                <span>Metales</span>
+                <span class="tag tag-pending">Pendiente</span>
+              </div>
+            </div>
+
+            <div class="dashboard-chart">
+              <div class="chart-heading">
+                <div>
+                  <strong>Actividad mensual</strong>
+                  <small>Ensayos registrados</small>
+                </div>
+                <span>Últimos 6 meses</span>
+              </div>
+              <div class="bars" aria-hidden="true">
+                <span style="height: 42%"></span>
+                <span style="height: 58%"></span>
+                <span style="height: 50%"></span>
+                <span style="height: 72%"></span>
+                <span style="height: 66%"></span>
+                <span style="height: 88%"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="floating-card floating-card-one">
+            <span class="floating-icon">✓</span>
+            <div>
+              <strong>Informe validado</strong>
+              <small>Hace 2 minutos</small>
+            </div>
+          </div>
+
+          <div class="floating-card floating-card-two">
+            <span class="floating-icon">↗</span>
+            <div>
+              <strong>Trazabilidad completa</strong>
+              <small>Desde recepción hasta informe</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section features" id="funcionalidades">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Funcionalidades principales</span>
+          <h2>Todo el flujo del laboratorio en una sola plataforma</h2>
+          <p>
+            GESLASOFT organiza la información operativa y documental para que el
+            equipo trabaje con mayor claridad y reduzca tareas repetitivas.
+          </p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-number">01</span>
+            <h3>Gestión de muestras</h3>
+            <p>Registra el ingreso, codificación, ubicación, estado y responsable de cada muestra.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-number">02</span>
+            <h3>Resultados e informes</h3>
+            <p>Consolida resultados, revisiones, validaciones y emisión de informes de ensayo.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-number">03</span>
+            <h3>Control documental</h3>
+            <p>Mantén procedimientos, formatos, versiones y registros disponibles para el personal autorizado.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-number">04</span>
+            <h3>Usuarios y permisos</h3>
+            <p>Define perfiles de acceso según las funciones y responsabilidades de cada integrante.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-number">05</span>
+            <h3>Equipos y mantenimiento</h3>
+            <p>Controla calibraciones, verificaciones, mantenimientos y alertas de vencimiento.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-number">06</span>
+            <h3>Indicadores y seguimiento</h3>
+            <p>Visualiza cargas de trabajo, estados de muestras, tiempos y productividad del laboratorio.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about-section" id="nosotros">
+      <div class="container about-grid">
+        <div>
+          <span class="eyebrow">Tecnología aplicada al laboratorio</span>
+          <h2>Un sistema pensado para simplificar procesos reales</h2>
+        </div>
+        <div class="about-copy">
+          <p>
+            GESLASOFT busca facilitar la transformación digital de laboratorios
+            de ensayo mediante herramientas claras, adaptables y orientadas al
+            trabajo diario.
+          </p>
+          <p>
+            La plataforma puede configurarse de acuerdo con los procesos,
+            servicios, áreas y responsabilidades de cada organización.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact-section" id="contacto">
+      <div class="container contact-card">
+        <div>
+          <span class="eyebrow eyebrow-light">Conoce la plataforma</span>
+          <h2>Descubre cómo GESLASOFT puede adaptarse a tu laboratorio</h2>
+          <p>
+            Solicita una demostración y revisa las funciones que podrían
+            incorporarse a tus procesos.
+          </p>
+        </div>
+        <a class="button button-light" href="mailto:contacto@geslasoft.com">
+          Contactar a GESLASOFT
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand brand-footer" href="#inicio">
+          <span class="brand-icon" aria-hidden="true">G</span>
+          <span class="brand-text">
+            <strong>GESLASOFT</strong>
+            <small>Software para laboratorios de ensayo</small>
+          </span>
+        </a>
+        <p>
+          Plataforma de gestión orientada a la digitalización y trazabilidad de
+          procesos de laboratorio.
+        </p>
+      </div>
+      <div>
+        <strong>Enlaces</strong>
+        <a href="#funcionalidades">Funcionalidades</a>
+        <a href="#directorio">Directorio gratuito</a>
+        <a href="#nosotros">Nosotros</a>
+      </div>
+      <div>
+        <strong>Contacto</strong>
+        <a href="mailto:geslasoft@gmail.com">geslasoft@gmail.com</a>
+        <span>Lima, Perú</span>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      <span>© <span id="currentYear"></span> GESLASOFT. Todos los derechos reservados.</span>
+      <span>Privacidad · Términos</span>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
