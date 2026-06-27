@@ -157,7 +157,7 @@ serve(async (req) => {
       </div>` : ''}
       <div style="background:#FFFFFF;border-radius:8px;padding:16px;margin-bottom:24px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
         <p style="color:#0097A7;font-size:11px;font-weight:700;margin:0 0 10px;">📇 CONTACTO DEL LABORATORIO</p>
-        <p style=""color:#455A64;font-size:12px;margin:4px 0 0;">🏢 ${lab_nombre}</p>
+        <p style="color:#455A64;font-size:12px;margin:4px 0 0;">🏢 ${lab_nombre}</p>
         ${lab_telefono ? `<p style="color:#455A64;font-size:12px;margin:4px 0 0;">📞 ${lab_telefono}</p>` : ''}
         ${lab_email ? `<p style="color:#455A64;font-size:12px;margin:4px 0 0;">✉ ${lab_email}</p>` : ''}
       </div>
