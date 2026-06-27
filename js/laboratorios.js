@@ -348,7 +348,10 @@ function crearCard(lab, idx) {
       codigo:          lab.codigo, 
       nombre:          lab.nombre,
       ubicacion:       [lab.distrito, lab.provincia].filter(Boolean).join(', '),
-      logo_url:        lab.logo_url || null,  
+      logo_url:        lab.logo_url || null,
+      telefono:        lab.telefono        || null,
+      email_contacto:  lab.email_contacto  || null,
+      nombre_alternativo:  lab.nombre_alternativo  || null,
     }));
     window.location.href = 'formulario.html';
   });

@@ -152,11 +152,11 @@ function crearCard(sol) {
       <div class="detalle-seccion">
         <div class="detalle-seccion-titulo">Cliente</div>
         <div class="detalle-grid">
-          <span class="detalle-label">Empresa</span>
+          <span class="detalle-label">Empresa :</span>
           ${val(sol.empresa_solicitante)}
-          <span class="detalle-label">${sol.ruc_dni && sol.ruc_dni.length === 11 ? 'RUC' : sol.ruc_dni && sol.ruc_dni.length === 8 ? 'DNI' : 'RUC / DNI'}</span>
+          <span class="detalle-label">${sol.ruc_dni && sol.ruc_dni.length === 11 ? 'RUC :' : sol.ruc_dni && sol.ruc_dni.length === 8 ? 'DNI :' : 'RUC / DNI :'}</span>
           ${val(sol.ruc_dni)}
-          <span class="detalle-label">Dirección</span>
+          <span class="detalle-label">Dirección :</span>
           ${val(sol.direccion)}
         </div>
       </div>
@@ -165,13 +165,13 @@ function crearCard(sol) {
       <div class="detalle-seccion">
         <div class="detalle-seccion-titulo">Solicitante</div>
         <div class="detalle-grid">
-          <span class="detalle-label">Nombre</span>
+          <span class="detalle-label">Nombre :</span>
           ${val(sol.nombre_solicitante)}
-          <span class="detalle-label">Cargo</span>
+          <span class="detalle-label">Cargo :</span>
           ${val(sol.cargo_solicitante)}
-          <span class="detalle-label">Teléfono</span>
+          <span class="detalle-label">Teléfono :</span>
           ${val(sol.telefono)}
-          <span class="detalle-label">Email</span>
+          <span class="detalle-label">Email :</span>
           ${val(sol.email)}
         </div>
       </div>
@@ -180,10 +180,10 @@ function crearCard(sol) {
       <div class="detalle-seccion">
         <div class="detalle-seccion-titulo">Proyecto</div>
         <div class="detalle-grid">
-          <span class="detalle-label">Nombre</span>
+          <span class="detalle-label">Nombre :</span>
           ${val(sol.nombre_proyecto)}
-          <span class="detalle-label">Descripción</span>
-          ${val(sol.descripcion)}
+          <span class="detalle-label">Descripción :</span>
+          ${val(sol.ubicacion)}
         </div>
       </div>
 
@@ -212,9 +212,12 @@ function crearCard(sol) {
 
       <!-- PIE -->
       <div class="detalle-footer">
-        <span class="detalle-footer-item">Origen: <strong>${sol.origen || '—'}</strong></span>
-        <span class="detalle-footer-item">Registrado: <strong>${dia} ${hora}</strong></span>
-        ${sol.aprobado_en ? `<span class="detalle-footer-item">Aprobado: <strong>${aprobDia}</strong></span>` : ''}
+        <span class="detalle-footer-item">Registrado por: <strong>${
+          sol.origen === 'portal_publico'  ? 'Cliente externo' :
+          sol.origen === 'portal_cliente'  ? `${sol.usuarios?.nombre_completo || '—'} (cliente)` :
+                                             `${sol.usuarios?.nombre_completo || '—'} (personal interno)`
+        }</strong></span>
+        <span class="detalle-footer-item">Fecha de registro: <strong>${dia} ${hora}</strong></span>
       </div>
 
     </div>
@@ -318,6 +321,7 @@ function poblarAnios() {
 async function cargarSolicitudes(token, organizacionId) {
   const url = `${SUPABASE_URL}/rest/v1/solicitudes`
     + `?organizacion_id=eq.${organizacionId}`
+    + `&select=*,usuarios(nombre_completo)`
     + `&order=creado_en.desc`;
 
   const res = await fetch(url, {

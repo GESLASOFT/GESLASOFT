@@ -102,6 +102,32 @@
         </div>
       </div> <br>
 
+
+      <!-- CARD: Información adicional (opcional) -->
+      <div class="card" id="cardInfoAdicional">
+        <div class="card-header" id="toggleInfoAdicional" role="button" tabindex="0" style="cursor:pointer; justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg class="card-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            <span>Información adicional <span style="font-weight:400;opacity:.6;">(opcional)</span></span>
+          </div>
+          <svg id="iconoToggleInfo" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s;">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="card-body hidden" id="bodyInfoAdicional">
+          <div class="field">
+            <label for="nombreProyecto">Nombre del proyecto</label>
+            <input type="text" id="nombreProyecto" name="nombreProyecto" placeholder="Ej: Edificio Residencial Torre Norte" />
+          </div>
+          <div class="field">
+            <label for="ubicacionProyecto">Ubicación del proyecto</label>
+            <input type="text" id="ubicacionProyecto" name="ubicacionProyecto" placeholder="Ej: Av. Javier Prado 1234, San Isidro" />
+          </div>
+        </div>
+      </div><br>
+
       <!-- CARD: Seleccionar ensayos -->
       <div class="card">
         <div class="card-header">

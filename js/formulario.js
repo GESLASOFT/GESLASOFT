@@ -404,8 +404,16 @@ async function enviarSolicitud() {
         telefono:             document.getElementById('telefono').value.trim(),
         email:                document.getElementById('email').value.trim()         || null,
         observaciones:        document.getElementById('observaciones').value.trim() || null,
-        laboratorio_codigo:   labActual?.codigo || null,   
-        origen:               'portal_cliente',
+        nombre_proyecto:      document.getElementById('nombreProyecto').value.trim()    || null,
+        ubicacion:            document.getElementById('ubicacionProyecto').value.trim() || null,
+        laboratorio_codigo:   labActual?.codigo || null,
+        origen: (() => {
+          const token   = sessionStorage.getItem('geslasoft_token');
+          const usuario = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || '{}');
+          if (!token)                    return 'portal_publico';
+          if (usuario.organizacion_id)   return 'portal_interno';
+          return 'portal_cliente';
+        })(),
         estado:               'nueva',
         version:              1,
       }),
@@ -432,6 +440,43 @@ async function enviarSolicitud() {
 
 
 // ── Éxito ──
+// ── Enviar correos ──
+try {
+  await fetch(
+    'https://aahisaouszyvcqhgzssx.supabase.co/functions/v1/enviar-correo',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'Authorization': `Bearer ${SUPABASE_ANON}`,
+      },
+      body: JSON.stringify({
+        nro_solicitud,
+        nombre_solicitante:  document.getElementById('nombre').value.trim(),
+        empresa_solicitante: document.getElementById('empresa').value.trim(),
+        ruc_dni:             document.getElementById('rucDni').value.trim()        || null,
+        direccion:           document.getElementById('direccion').value.trim()     || null,
+        cargo_solicitante:   document.getElementById('cargo').value.trim()         || null,
+        telefono:            document.getElementById('telefono').value.trim(),
+        email:               document.getElementById('email').value.trim(),
+        nombre_proyecto:     document.getElementById('nombreProyecto').value.trim() || null,
+        ubicacion:           document.getElementById('ubicacionProyecto').value.trim() || null,
+        observaciones:       document.getElementById('observaciones').value.trim() || null,
+        items,
+        lab_nombre:    labActual?.nombre   || '',
+        lab_codigo:    labActual?.codigo   || '',
+        lab_telefono:  labActual?.telefono || null,
+        lab_email:     labActual?.email_contacto || null,
+        lab_nombre_alternativo:    labActual?.nombre_alternativo || labActual?.nombre || '',
+      }),
+    }
+  );
+} catch (e) {
+  console.warn('Correo no enviado:', e.message);
+}
+
+
+
     document.querySelector('.modal-desc').innerHTML =
       `Registrada correctamente con el número <strong>${nro_solicitud}</strong>.<br>El laboratorio la atenderá a la brevedad.`;
     modalOverlay.classList.remove('hidden');
@@ -544,3 +589,11 @@ function mostrarToast(msg, tipo = 'accent') {
     setTimeout(() => toast.remove(), 300);
   }, 2500);
 }
+
+// ── TOGGLE INFO ADICIONAL ──
+document.getElementById('toggleInfoAdicional').addEventListener('click', () => {
+  const body  = document.getElementById('bodyInfoAdicional');
+  const icono = document.getElementById('iconoToggleInfo');
+  body.classList.toggle('hidden');
+  icono.style.transform = body.classList.contains('hidden') ? '' : 'rotate(180deg)';
+});
