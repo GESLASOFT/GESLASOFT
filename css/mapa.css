@@ -347,3 +347,66 @@
   margin-bottom: 10px;
   display: inline-block;
 }
+
+/* ══════════════════════════════════════════
+   MAPA.CSS — parche modo oscuro
+   Agregar al FINAL de mapa.css
+   ══════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+
+  /* ── Contador flotante ──
+     El rgba hardcodeado quedaba oscuro sobre oscuro.
+     Se aclara el fondo y se mantiene el texto blanco. */
+  .mapa-count {
+    background: rgba(79, 195, 247, 0.15);
+    color: #e8f4ff;
+    border: 1px solid rgba(79, 195, 247, 0.25);
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── Panel detalle ──
+     Sombra más pronunciada para que el panel
+     se distinga del mapa en fondo oscuro. */
+  .panel-detalle {
+    box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.6);
+    border-top: 1px solid rgba(79, 195, 247, 0.18);
+  }
+
+  /* ── Tabla de métodos ──
+     El contraste entre filas pares/impares era casi nulo.
+     Se diferencian usando tonos del sistema de variables. */
+  .panel-metodos-tabla tbody tr:nth-child(even) {
+    background: rgba(79, 195, 247, 0.06);
+  }
+  .panel-metodos-tabla tbody tr:nth-child(odd) {
+    background: var(--surface);
+  }
+  .panel-metodos-tabla tbody tr {
+    border-bottom: 1px solid rgba(79, 195, 247, 0.12);
+  }
+
+  /* ── Popup de Leaflet ──
+     Leaflet inyecta su propio CSS con fondos blancos;
+     se sobreescriben para respetar el tema oscuro. */
+  .leaflet-popup-content-wrapper {
+    background: var(--surface) !important;
+    border: 1px solid rgba(79, 195, 247, 0.2) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+  }
+  .leaflet-popup-tip {
+    background: var(--surface) !important;
+  }
+  .leaflet-popup-content .popup-nombre {
+    color: var(--text) !important;
+  }
+  .leaflet-popup-content .popup-loc {
+    color: var(--text-sub) !important;
+  }
+  .leaflet-popup-content .popup-ver {
+    color: var(--accent) !important;
+  }
+  .leaflet-popup-content .popup-dist {
+    color: var(--accent) !important;
+  }
+}
