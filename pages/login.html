@@ -9,8 +9,126 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/base.css" />
   <link rel="stylesheet" href="../css/login.css" />
-  <link rel="stylesheet" href="login.css">
 
+  <style>
+    /* ── LINK OLVIDÉ CONTRASEÑA ── */
+    .forgot-link {
+      display: block;
+      text-align: right;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent);
+      text-decoration: none;
+      margin-top: -10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font);
+      transition: opacity .15s;
+    }
+    .forgot-link:hover { opacity: .75; }
+
+    /* ── OVERLAY MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .modal-overlay.visible { display: flex; }
+
+    /* ── MODAL CARD ── */
+    .modal-card {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: loginFadeUp .25s ease both;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .modal-titles { display: flex; flex-direction: column; gap: 4px; }
+    .modal-title  { font-size: 17px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .modal-desc   { font-size: 12px; color: var(--text-sub); line-height: 1.5; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text-sub);
+      padding: 2px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: color .15s;
+      display: flex;
+      align-items: center;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── ESTADO ÉXITO MODAL ── */
+    .modal-success {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    .modal-success.visible { display: flex; }
+    .modal-success-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 1.5px solid rgba(0,137,123,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent);
+    }
+    .modal-success-title { font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-success-desc  { font-size: 12px; color: var(--text-sub); line-height: 1.6; }
+
+    .modal-form { display: flex; flex-direction: column; gap: 16px; }
+    .modal-form.hidden { display: none; }
+
+    /* MODO OSCURO MODAL */
+    @media (prefers-color-scheme: dark) {
+      .modal-card {
+        background: #0f1623;
+        border-color: rgba(79,195,247,.15);
+        box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 0 1px rgba(79,195,247,.08);
+      }
+      .modal-card input[type="email"] {
+        background: rgba(255,255,255,.04);
+        border-color: rgba(79,195,247,.18);
+        color: #e8f4ff;
+      }
+      .modal-card input::placeholder { color: rgba(200,225,255,.25); }
+      .modal-success-icon {
+        background: rgba(79,195,247,.12);
+        border-color: rgba(79,195,247,.25);
+      }
+    }
+  </style>
 </head>
 <body>
 
@@ -100,6 +218,11 @@
           <span class="field-error" id="passwordError">Ingresa tu contraseña</span>
         </div>
 
+        <!-- OLVIDÉ MI CONTRASEÑA -->
+        <button type="button" class="forgot-link" id="btnForgot">
+          ¿Olvidaste tu contraseña?
+        </button>
+
         <!-- BOTÓN INGRESAR -->
         <button type="button" class="btn-primary" id="btnLogin">
           <div class="btn-spinner" id="btnSpinner"></div>
@@ -141,6 +264,88 @@
     Conocer GESLASOFT
   </a>
 
+  <!-- ══════════════════════════════════════════
+       MODAL — RECUPERAR CONTRASEÑA
+  ══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="modalOverlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+
+    <div class="modal-card">
+
+      <div class="modal-header">
+        <div class="modal-titles">
+          <div class="modal-title" id="modalTitle">Recuperar contraseña</div>
+          <div class="modal-desc">Te enviaremos un enlace para restablecer tu contraseña.</div>
+        </div>
+        <button type="button" class="modal-close" id="btnModalClose" aria-label="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- FORMULARIO -->
+      <div class="modal-form" id="modalForm">
+
+        <!-- ERROR MODAL -->
+        <div class="login-error" id="modalError">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <span id="modalErrorMsg">Ocurrió un error. Intenta de nuevo.</span>
+        </div>
+
+        <div class="field">
+          <label for="resetEmail">Correo electrónico</label>
+          <div class="input-icon-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <input type="email" id="resetEmail"
+                   placeholder="usuario@laboratorio.com"
+                   autocomplete="email" />
+          </div>
+          <span class="field-error" id="resetEmailError">Ingresa un correo válido</span>
+        </div>
+
+        <button type="button" class="btn-primary" id="btnSendReset">
+          <div class="btn-spinner" id="resetSpinner"></div>
+          <span class="btn-label">Enviar enlace</span>
+        </button>
+
+      </div>
+
+      <!-- ESTADO ÉXITO -->
+      <div class="modal-success" id="modalSuccess">
+        <div class="modal-success-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div class="modal-success-title">Revisa tu correo</div>
+        <div class="modal-success-desc">
+          Si existe una cuenta con ese correo, recibirás un enlace para restablecer tu contraseña en los próximos minutos.
+        </div>
+        <button type="button" class="btn-primary" id="btnModalDone" style="margin-top:4px;">
+          <span class="btn-label">Entendido</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <script>
     // ── CONFIGURACIÓN SUPABASE ──
     const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
@@ -152,10 +357,10 @@
       'Content-Type':  'application/json',
     };
 
+    // ── REFERENCIAS LOGIN ──
     const inputEmail    = document.getElementById('email');
     const inputPassword = document.getElementById('password');
     const btnLogin      = document.getElementById('btnLogin');
-    const btnSpinner    = document.getElementById('btnSpinner');
     const loginError    = document.getElementById('loginError');
     const loginErrorMsg = document.getElementById('loginErrorMsg');
     const emailError    = document.getElementById('emailError');
@@ -163,6 +368,22 @@
     const btnTogglePass = document.getElementById('btnTogglePass');
     const iconOjo       = document.getElementById('iconOjo');
 
+    // ── REFERENCIAS MODAL ──
+    const btnForgot      = document.getElementById('btnForgot');
+    const modalOverlay   = document.getElementById('modalOverlay');
+    const btnModalClose  = document.getElementById('btnModalClose');
+    const modalForm      = document.getElementById('modalForm');
+    const modalSuccess   = document.getElementById('modalSuccess');
+    const modalError     = document.getElementById('modalError');
+    const modalErrorMsg  = document.getElementById('modalErrorMsg');
+    const resetEmail     = document.getElementById('resetEmail');
+    const resetEmailError= document.getElementById('resetEmailError');
+    const btnSendReset   = document.getElementById('btnSendReset');
+    const btnModalDone   = document.getElementById('btnModalDone');
+
+    // ══════════════════════════════════════════
+    // LÓGICA LOGIN (sin cambios)
+    // ══════════════════════════════════════════
     btnTogglePass.addEventListener('click', () => {
       const esPassword = inputPassword.type === 'password';
       inputPassword.type = esPassword ? 'text' : 'password';
@@ -198,7 +419,6 @@
       let ok = true;
       const email = inputEmail.value.trim();
       const pass  = inputPassword.value;
-
       if (!email || !email.includes('@') || !email.includes('.')) {
         inputEmail.classList.add('invalid');
         emailError.classList.add('visible');
@@ -287,6 +507,107 @@
     }
 
     btnLogin.addEventListener('click', iniciarSesion);
+
+    // ══════════════════════════════════════════
+    // LÓGICA MODAL — RECUPERAR CONTRASEÑA
+    // ══════════════════════════════════════════
+
+    function abrirModal() {
+      // Resetear estado
+      modalForm.classList.remove('hidden');
+      modalSuccess.classList.remove('visible');
+      modalError.classList.remove('visible');
+      resetEmail.value = '';
+      resetEmail.classList.remove('invalid');
+      resetEmailError.classList.remove('visible');
+      // Pre-rellenar si el usuario ya escribió su correo
+      if (inputEmail.value.trim()) {
+        resetEmail.value = inputEmail.value.trim();
+      }
+      modalOverlay.classList.add('visible');
+      setTimeout(() => resetEmail.focus(), 50);
+    }
+
+    function cerrarModal() {
+      modalOverlay.classList.remove('visible');
+    }
+
+    btnForgot.addEventListener('click', abrirModal);
+    btnModalClose.addEventListener('click', cerrarModal);
+    btnModalDone.addEventListener('click', cerrarModal);
+
+    // Cerrar al hacer clic en el fondo
+    modalOverlay.addEventListener('click', e => {
+      if (e.target === modalOverlay) cerrarModal();
+    });
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modalOverlay.classList.contains('visible')) cerrarModal();
+    });
+
+    resetEmail.addEventListener('input', () => {
+      resetEmail.classList.remove('invalid');
+      resetEmailError.classList.remove('visible');
+      modalError.classList.remove('visible');
+    });
+
+    resetEmail.addEventListener('keydown', e => {
+      if (e.key === 'Enter') enviarReset();
+    });
+
+    function setResetLoading(loading) {
+      btnSendReset.disabled = loading;
+      btnSendReset.classList.toggle('loading', loading);
+    }
+
+    async function enviarReset() {
+      const email = resetEmail.value.trim();
+
+      // Validar
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        resetEmail.classList.add('invalid');
+        resetEmailError.classList.add('visible');
+        return;
+      }
+
+      setResetLoading(true);
+      modalError.classList.remove('visible');
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+          method: 'POST',
+          headers: {
+            'apikey':       SUPABASE_ANON,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            redirectTo: 'http://localhost/geslasoft/pages/reset_password.html',
+          }),
+        });
+
+        // Supabase devuelve 200 tanto si el correo existe como si no
+        // (por seguridad no revela si el correo está registrado)
+        if (res.ok || res.status === 200) {
+          modalForm.classList.add('hidden');
+          modalSuccess.classList.add('visible');
+        } else {
+          const data = await res.json();
+          modalErrorMsg.textContent = data.message || 'Ocurrió un error. Intenta de nuevo.';
+          modalError.classList.add('visible');
+        }
+
+      } catch (err) {
+        console.error(err);
+        modalErrorMsg.textContent = 'Error de conexión. Intenta de nuevo.';
+        modalError.classList.add('visible');
+      } finally {
+        setResetLoading(false);
+      }
+    }
+
+    btnSendReset.addEventListener('click', enviarReset);
   </script>
 
 </body>
