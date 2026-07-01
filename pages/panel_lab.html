@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel · GESLASOFT</title>
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/panel_lab.css" />
+</head>
+<body>
+
+<div class="panel-page">
+
+  <!-- ── HEADER ── -->
+  <header class="panel-header">
+
+    <!-- Brand -->
+    <div class="panel-header-brand">
+      <div class="panel-header-logo">
+        <img src="logo_geslasoft.png" alt="GESLASOFT"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"
+             style="display:none">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4
+                   M9 3v18m0 0h10a2 2 0 0 0 2-2v-4
+                   M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+        </svg>
+      </div>
+      <div>
+        <div class="panel-brand-name">GESLASOFT</div>
+        <div class="panel-brand-sub">LIMS · ISO 17025</div>
+      </div>
+    </div>
+
+    <div class="panel-header-divider"></div>
+
+    <!-- Nombre del laboratorio -->
+    <div class="panel-lab-info">
+      <div class="panel-lab-nombre" id="headerLabNombre">Cargando...</div>
+      <div class="panel-lab-ubicacion" id="headerLabUbicacion"></div>
+    </div>
+
+    <!-- Usuario + salir -->
+    <div class="panel-header-right">
+      <div class="panel-usuario-badge">
+        <div class="panel-usuario-avatar" id="usuarioAvatar">?</div>
+        <div>
+          <div class="panel-usuario-nombre" id="usuarioNombre">—</div>
+          <div class="panel-usuario-rol" id="usuarioRol">—</div>
+        </div>
+      </div>
+      <button class="btn-salir" id="btnSalir">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Salir
+      </button>
+    </div>
+
+  </header>
+
+  <!-- ── CONTENIDO ── -->
+  <main class="panel-content">
+
+    <!-- CARGANDO -->
+    <div class="panel-loading" id="estadoCargando">
+      <div class="panel-spinner"></div>
+      <span>Cargando panel...</span>
+    </div>
+
+    <!-- CONTENIDO REAL (oculto hasta cargar) -->
+    <div id="panelContenido" style="display:none; display:flex; flex-direction:column; gap:24px;">
+
+      <!-- BIENVENIDA -->
+      <div class="panel-bienvenida">
+        <div class="bienvenida-texto">
+          <div class="bienvenida-saludo">
+            Hola, <span id="bienvenidaNombre">—</span>
+          </div>
+          <div class="bienvenida-sub" id="bienvenidaLab">—</div>
+        </div>
+        <div class="bienvenida-fecha">
+          <strong id="fechaHoy">—</strong>
+          <span id="horaActual">—</span>
+        </div>
+      </div>
+
+      <!-- MÓDULOS -->
+      <div class="modulos-seccion" id="modulosSeccion"></div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- TOAST EN DESARROLLO -->
+<div class="toast-dev" id="toastDev">Módulo en desarrollo</div>
+
+<!-- ── MODAL CONFIRMAR SALIDA ── -->
+<div class="modal-salir-overlay" id="modalSalirOverlay">
+  <div class="modal-salir">
+    <div class="modal-salir-icono">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <div class="modal-salir-titulo">¿Cerrar sesión?</div>
+    <div class="modal-salir-desc">Serás redirigido al inicio de sesión y deberás volver a ingresar.</div>
+    <div class="modal-salir-acciones">
+      <button class="btn-modal-cancelar" id="btnModalCancelar">Cancelar</button>
+      <button class="btn-modal-salir"    id="btnModalConfirmar">Sí, salir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── CONFIGURACIÓN ──
+  const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
+
+  // ── MÓDULOS DEL SISTEMA ──
+  const MODULOS_CONFIG = [
+    // COMERCIAL
+    { id: 'comercial.requerimiento', titulo: 'Solicitudes', sub: 'Solicitar ensayos',           area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '📋' },
+    { id: 'comercial.cotizacion',    titulo: 'Cotización',                 sub: 'Enviar al cliente',           area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '💰' },
+    { id: 'comercial.recepcion',     titulo: 'Recepción de Muestras',      sub: 'Registro físico',             area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '📥' },
+    { id: 'comercial.servicios',     titulo: 'Servicios',                  sub: 'En proceso · Completados',    area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '📁' },
+    { id: 'comercial.custodia',      titulo: 'Cadena de Custodia',         sub: 'Trazabilidad',                area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '🔗' },
+    { id: 'comercial.orden_trabajo', titulo: 'Orden de Trabajo',           sub: 'Asignar al técnico',          area: 'comercial', color: '#1565C0', bg: '#E3F0FF', icon: '✅' },
+    // TÉCNICA
+    { id: 'tecnica.metodos',   titulo: 'Métodos de Ensayo',       sub: 'ASTM · NTP · MTC',            area: 'tecnica', color: '#00897B', bg: '#E0F2F1', icon: '📖' },
+    { id: 'tecnica.ensayos',   titulo: 'Registro de Ensayos',     sub: 'Geotecnia · Suelos',          area: 'tecnica', color: '#00897B', bg: '#E0F2F1', icon: '🔬' },
+    { id: 'tecnica.ambiental', titulo: 'Condiciones Ambientales', sub: 'Temperatura · Humedad',       area: 'tecnica', color: '#00897B', bg: '#E0F2F1', icon: '🌡️' },
+    { id: 'tecnica.aptitud',   titulo: 'Aseg. de Calidad',        sub: 'Control · Aptitud',           area: 'tecnica', color: '#00897B', bg: '#E0F2F1', icon: '✔️' },
+    { id: 'tecnica.informes',  titulo: 'Generación de Informes',  sub: 'PDF · ISO 17025',             area: 'tecnica', color: '#00897B', bg: '#E0F2F1', icon: '📊' },
+    // EQUIPOS
+    { id: 'equipos.calibracion',   titulo: 'Calibración',  sub: 'Equipos · Instrumentos', area: 'recursos', color: '#F59E0B', bg: '#FEF3C7', icon: '📐' },
+    { id: 'equipos.equipos',       titulo: 'Equipamiento', sub: 'Gestión de equipos',     area: 'recursos', color: '#F59E0B', bg: '#FEF3C7', icon: '⚖️' },
+    { id: 'equipos.mantenimiento', titulo: 'Logística',    sub: 'Compras · Proveedores',  area: 'recursos', color: '#F59E0B', bg: '#FEF3C7', icon: '🚚' },
+    { id: 'personal.personal',     titulo: 'Personal',     sub: 'Roles · Formación',      area: 'recursos', color: '#F59E0B', bg: '#FEF3C7', icon: '👥' },
+    // CALIDAD
+    { id: 'documentos.control',        titulo: 'Gestión Documental',      sub: 'Procedimientos · Formatos', area: 'calidad', color: '#7C3AED', bg: '#EDE9FE', icon: '📂' },
+    { id: 'calidad.quejas',            titulo: 'Quejas y No Conformidades',sub: 'Registro · Seguimiento',   area: 'calidad', color: '#7C3AED', bg: '#EDE9FE', icon: '⚠️' },
+    { id: 'calidad.accion_correctiva', titulo: 'Acciones Correctivas',    sub: 'Causa raíz · Cierre',      area: 'calidad', color: '#7C3AED', bg: '#EDE9FE', icon: '🔧' },
+    { id: 'calidad.no_conformidad',    titulo: 'Riesgos y Oportunidades', sub: 'Identificar · Mitigar',    area: 'calidad', color: '#7C3AED', bg: '#EDE9FE', icon: '🛡️' },
+    { id: 'calidad.auditoria',         titulo: 'Auditorías Internas',     sub: 'Programa · Hallazgos',     area: 'calidad', color: '#7C3AED', bg: '#EDE9FE', icon: '🔍' },
+    // SISTEMA
+    { id: 'admin.reportes',       titulo: 'Trazabilidad',  sub: 'Historial · Auditoría', area: 'sistema', color: '#0284C7', bg: '#E0F2FE', icon: '📈' },
+    { id: 'admin.configuracion',  titulo: 'Configuración', sub: 'Usuarios · Roles',      area: 'sistema', color: '#0284C7', bg: '#E0F2FE', icon: '⚙️' },
+  ];
+
+  const AREAS_CONFIG = {
+    comercial: { label: 'Área Comercial',   clase: 'area-comercial'  },
+    tecnica:   { label: 'Área Técnica',     clase: 'area-tecnica'    },
+    recursos:  { label: 'Área de Recursos', clase: 'area-recursos'   },
+    calidad:   { label: 'Área de Calidad',  clase: 'area-calidad'    },
+    sistema:   { label: 'Sistema',          clase: 'area-sistema'    },
+  };
+
+  // ── TOAST ──
+  let toastTimer;
+  function mostrarToast(msg) {
+    const toast = document.getElementById('toastDev');
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('visible'), 2500);
+  }
+
+  // ── MODAL SALIR ──
+  const overlay        = document.getElementById('modalSalirOverlay');
+  const btnCancelar    = document.getElementById('btnModalCancelar');
+  const btnConfirmar   = document.getElementById('btnModalConfirmar');
+
+  function abrirModalSalir()  { overlay.classList.add('visible'); }
+  function cerrarModalSalir() { overlay.classList.remove('visible'); }
+
+  function ejecutarSalida() {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+  }
+
+  // Abrir al hacer clic en "Salir"
+  document.getElementById('btnSalir').addEventListener('click', abrirModalSalir);
+
+  // Cancelar
+  btnCancelar.addEventListener('click', cerrarModalSalir);
+
+  // Confirmar salida
+  btnConfirmar.addEventListener('click', ejecutarSalida);
+
+  // Clic fuera del modal
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) cerrarModalSalir();
+  });
+
+  // Tecla Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') cerrarModalSalir();
+  });
+
+  // ── FECHA Y HORA ──
+  function actualizarFecha() {
+    const ahora = new Date();
+    const fecha = ahora.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const hora  = ahora.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('fechaHoy').textContent   = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+    document.getElementById('horaActual').textContent = hora;
+  }
+
+  // ── RENDER MÓDULOS ──
+  function renderModulos(permisosIds) {
+    const seccion = document.getElementById('modulosSeccion');
+    seccion.innerHTML = '';
+
+    const modulosVisibles = MODULOS_CONFIG.filter(m => permisosIds.includes(m.id));
+
+    if (modulosVisibles.length === 0) {
+      seccion.innerHTML = '<p style="color:var(--text-sub); font-size:13px;">No tienes módulos asignados. Contacta al administrador.</p>';
+      return;
+    }
+
+    const porArea = {};
+    modulosVisibles.forEach(m => {
+      if (!porArea[m.area]) porArea[m.area] = [];
+      porArea[m.area].push(m);
+    });
+
+    const ordenAreas = ['comercial', 'tecnica', 'recursos', 'calidad', 'sistema'];
+    ordenAreas.forEach(area => {
+      if (!porArea[area]) return;
+      const cfg = AREAS_CONFIG[area];
+
+      const areaDiv = document.createElement('div');
+
+      const label = document.createElement('div');
+      label.className = `modulos-area-label ${cfg.clase}`;
+      label.innerHTML = `<span>${cfg.label.toUpperCase()}</span>`;
+      areaDiv.appendChild(label);
+
+      const grid = document.createElement('div');
+      grid.className = 'modulos-grid';
+
+      porArea[area].forEach(m => {
+        const card = document.createElement('div');
+        card.className = 'modulo-card';
+        card.innerHTML = `
+          <div class="modulo-icon" style="background:${m.bg}; color:${m.color}">
+            <span style="font-size:20px">${m.icon}</span>
+          </div>
+          <div class="modulo-texts">
+            <div class="modulo-title">${m.titulo}</div>
+            <div class="modulo-sub">${m.sub}</div>
+          </div>
+        `;
+        card.style.borderTop = `3px solid ${m.color}20`;
+        card.addEventListener('click', () => {
+          if (m.id === 'comercial.requerimiento') {
+            window.location.href = 'panel_lab/requerimiento.html';
+          } else {
+            mostrarToast(`${m.titulo} — en desarrollo`);
+          }
+        });
+        grid.appendChild(card);
+      });
+
+      areaDiv.appendChild(grid);
+      seccion.appendChild(areaDiv);
+    });
+  }
+
+  // ── INIT ──
+  async function init() {
+    const token      = sessionStorage.getItem('geslasoft_token');
+    const usuarioStr = sessionStorage.getItem('geslasoft_usuario');
+
+    if (!token || !usuarioStr) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const usuario = JSON.parse(usuarioStr);
+
+    const rolCodigo = usuario.roles?.codigo || '';
+    if (rolCodigo === 'cliente_externo') {
+      window.location.href = 'mis_solicitudes.html';
+      return;
+    }
+
+    try {
+      const labRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/laboratorios?id=eq.${usuario.laboratorio_id}&select=nombre,codigo,distrito,provincia`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      const labs = await labRes.json();
+      const lab  = labs[0] || {};
+
+      const permisosRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/permisos_rol?rol_id=eq.${usuario.rol_id}&puede_ver=eq.true&select=modulos(codigo)`,
+        { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` } }
+      );
+      const permisos    = await permisosRes.json();
+      const permisosIds = permisos.map(p => p.modulos?.codigo).filter(Boolean);
+
+      const esSuperadmin = usuario.es_superadmin_geslasoft || rolCodigo === 'superadmin_lab';
+      const modulosIds   = esSuperadmin ? MODULOS_CONFIG.map(m => m.id) : permisosIds;
+
+      const nombreCorto = usuario.nombre_corto || usuario.nombre_completo?.split(' ')[0] || '—';
+      const ubicacion   = [lab.distrito, lab.provincia].filter(Boolean).join(', ');
+
+      document.getElementById('headerLabNombre').textContent    = lab.nombre || 'Laboratorio';
+      document.getElementById('headerLabUbicacion').textContent = ubicacion  || '';
+      document.getElementById('usuarioNombre').textContent      = nombreCorto;
+      document.getElementById('usuarioRol').textContent         = usuario.roles?.nombre || '—';
+      document.getElementById('usuarioAvatar').textContent      = (usuario.nombre_completo || '?')[0].toUpperCase();
+      document.getElementById('bienvenidaNombre').textContent   = nombreCorto;
+      document.getElementById('bienvenidaLab').textContent      = lab.nombre || '—';
+
+      actualizarFecha();
+      setInterval(actualizarFecha, 60000);
+      renderModulos(modulosIds);
+
+      document.getElementById('estadoCargando').style.display = 'none';
+      document.getElementById('panelContenido').style.display = 'flex';
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('estadoCargando').innerHTML =
+        `<p style="color:var(--danger)">Error al cargar el panel.<br>${err.message}</p>`;
+    }
+  }
+
+  init();
+</script>
+
+</body>
+</html>

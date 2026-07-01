@@ -710,3 +710,36 @@
   .fab-nueva { padding: 16px; border-radius: 50%; }
   .req-content { padding: 16px 12px 80px; }
 }
+
+/* ── BOTÓN COTIZAR / BADGE ATENDIDO ── */
+.btn-cotizar {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font);
+  color: #fff;
+  background: var(--accent);
+  border-radius: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s;
+}
+.btn-cotizar:hover {
+  background: var(--accent-mid);
+}
+
+.sol-badge-atendido {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: #00574F;
+  background: var(--accent-light);
+  border: 1px solid rgba(0,137,123,.25);
+  border-radius: 20px;
+  white-space: nowrap;
+}

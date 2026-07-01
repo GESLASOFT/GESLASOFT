@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis Solicitudes · GESLASOFT</title>
+  <link rel="stylesheet" href="../../css/base.css"/>
+  <link rel="stylesheet" href="../../css/mis_solicitudes.css"/>
+</head>
+<body>
+
+<div class="mis-sol-page">
+
+  <!-- ── HEADER ── -->
+  <header class="mis-sol-header">
+
+    <div class="mis-sol-brand">
+      <div class="mis-sol-logo">
+        <img src="logo_geslasoft.png" alt="GESLASOFT"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='block'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"
+             style="display:none">
+          <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4
+                   M9 3v18m0 0h10a2 2 0 0 0 2-2v-4
+                   M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+        </svg>
+      </div>
+      <div>
+        <div class="mis-sol-brand-name">GESLASOFT</div>
+        <div class="mis-sol-brand-sub">LIMS · ISO 17025</div>
+      </div>
+    </div>
+
+    <div class="mis-sol-header-divider"></div>
+
+    <div class="mis-sol-header-right">
+      <div class="mis-sol-usuario-badge">
+        <div class="mis-sol-avatar" id="usuarioAvatar">?</div>
+        <div>
+          <div class="mis-sol-usuario-nombre" id="usuarioNombre">—</div>
+          <div class="mis-sol-usuario-rol">Cliente</div>
+        </div>
+      </div>
+      <button class="btn-salir-sol" id="btnSalir">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Salir
+      </button>
+    </div>
+
+  </header>
+
+  <!-- ── CONTENIDO ── -->
+  <main class="mis-sol-content">
+
+    <!-- CARGANDO -->
+    <div class="mis-sol-loading" id="estadoCargando">
+      <div class="mis-sol-spinner"></div>
+      <span>Cargando solicitudes...</span>
+    </div>
+
+    <!-- CONTENIDO -->
+    <div id="contenido" style="display:none; flex-direction:column; gap:20px;">
+
+      <!-- BIENVENIDA -->
+      <div class="mis-sol-bienvenida">
+        <div class="bienvenida-info">
+          <div class="bienvenida-saludo">
+            Hola, <span id="bienvenidaNombre">—</span> 👋
+          </div>
+          <div class="bienvenida-desc">Aquí puedes ver el historial de tus solicitudes</div>
+        </div>
+        <a href="../sin_cuenta/laboratorios.html" class="btn-nueva-sol">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nueva solicitud
+        </a>
+      </div>
+
+      <!-- SOLICITUDES -->
+      <div class="mis-sol-seccion">
+        <div class="mis-sol-seccion-header">
+          <span class="mis-sol-seccion-titulo">MIS SOLICITUDES</span>
+          <span class="mis-sol-count" id="solicitudesCount">0 solicitudes</span>
+        </div>
+
+        <!-- CARGANDO SOLICITUDES -->
+        <div class="mis-sol-loading" id="cargandoSolicitudes" style="padding:24px">
+          <div class="mis-sol-spinner"></div>
+        </div>
+
+        <!-- LISTA -->
+        <div id="listaSolicitudes"></div>
+
+        <!-- VACÍO -->
+        <div class="mis-sol-vacio hidden" id="estadoVacio">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+               stroke="var(--text-sub)" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <p>Aún no tienes solicitudes</p>
+          <span>Haz clic en "Nueva solicitud" para comenzar</span>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
+
+  // ── ESTADO CONFIG ──
+  const ESTADO_CONFIG = {
+    nueva:                   { label: '● Nueva',                  clase: 'estado-nueva'             },
+    en_cotizacion:           { label: '⏳ En cotización',          clase: 'estado-en_cotizacion'     },
+    aceptada:                { label: '✓ Aceptada',               clase: 'estado-aceptada'          },
+    rechazada:               { label: '✗ Rechazada',              clase: 'estado-rechazada'         },
+    modificacion_solicitada: { label: '↩ Modificación solicitada', clase: 'estado-modificacion_solicitada' },
+  };
+
+  // ── TIEMPO RELATIVO ──
+  function tiempoRelativo(fechaStr) {
+    const diff = Date.now() - new Date(fechaStr).getTime();
+    const mins  = Math.floor(diff / 60000);
+    const horas = Math.floor(diff / 3600000);
+    const dias  = Math.floor(diff / 86400000);
+    if (mins < 1)   return 'Hace un momento';
+    if (mins < 60)  return `Hace ${mins} minuto${mins !== 1 ? 's' : ''}`;
+    if (horas < 24) return `Hace ${horas} hora${horas !== 1 ? 's' : ''}`;
+    return `Hace ${dias} día${dias !== 1 ? 's' : ''}`;
+  }
+
+  // ── RENDER SOLICITUDES ──
+    function renderSolicitudes(solicitudes) {
+        const lista  = document.getElementById('listaSolicitudes');
+        const vacio  = document.getElementById('estadoVacio');
+        const count  = document.getElementById('solicitudesCount');
+        const cargando = document.getElementById('cargandoSolicitudes');
+
+        cargando.style.display = 'none';
+        count.textContent = `${solicitudes.length} solicitud${solicitudes.length !== 1 ? 'es' : ''}`;
+
+        if (solicitudes.length === 0) {
+        vacio.classList.remove('hidden');
+        return;
+        }
+
+        vacio.classList.add('hidden');
+        lista.innerHTML = '';
+
+        solicitudes.forEach((sol, idx) => {
+        const cfg    = ESTADO_CONFIG[sol.estado] || { label: sol.estado, clase: 'estado-nueva' };
+        const card   = document.createElement('div');
+        card.className = 'sol-card';
+
+        const detalleId = `detalle-${idx}`;
+
+        const filasEnsayos = sol.ensayos.map(e => `
+            <div class="sol-ensayo-item">
+            <span class="sol-ensayo-norma">${e.norma || '—'}</span>
+            <span class="sol-ensayo-nombre">${e.ensayo_nombre || '—'}</span>
+            <span class="sol-ensayo-cant">x${e.cantidad || 1}</span>
+            </div>
+        `).join('');
+
+        card.innerHTML = `
+
+
+            <div class="sol-card-top">
+            <div class="sol-lab-logo">
+                ${sol.laboratorio?.logo_url
+                ? `<img src="${sol.laboratorio.logo_url}" alt="${sol.laboratorio.nombre}" />`
+                : `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2v-4M9 21H5a2 2 0 0 1-2-2v-4m0 0h18"/>
+                    </svg>`
+                }
+            </div>
+            <div class="sol-card-left">
+                <div class="sol-nro">${sol.nro_solicitud || '—'}</div>
+                <div class="sol-lab">${sol.laboratorio?.nombre || sol.laboratorio_codigo || '—'}</div>
+                ${sol.laboratorio ? `<div class="sol-lab-ubicacion">${sol.laboratorio.distrito}, ${sol.laboratorio.departamento}</div>` : ''}
+                <div class="sol-fecha">${tiempoRelativo(sol.creado_en)}</div>
+            </div>
+            <span class="sol-estado ${cfg.clase}">${cfg.label}</span>
+            </div>
+
+
+
+
+            <div class="sol-card-bottom">
+            <span class="sol-ensayos-count" data-target="${detalleId}">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10
+                        a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+                <rect x="9" y="3" width="6" height="4" rx="1"/>
+                </svg>
+                ${sol.total_ensayos || 0} ensayo${sol.total_ensayos !== 1 ? 's' : ''}
+                <svg class="sol-ensayos-arrow" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"/>
+                </svg>
+            </span>
+            </div>
+            <div class="sol-ensayos-detalle" id="${detalleId}">
+            ${filasEnsayos || '<div class="sol-ensayo-item">Sin ensayos registrados</div>'}
+            </div>
+        `;
+
+        lista.appendChild(card);
+        });
+
+        // Listener: toda la franja inferior expande/colapsa
+        lista.querySelectorAll('.sol-card-bottom').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const target = el.nextElementSibling; // el div .sol-ensayos-detalle que sigue
+            const arrow  = el.querySelector('.sol-ensayos-count');
+            target.classList.toggle('abierto');
+            arrow.classList.toggle('abierto');
+        });
+        });
+    }
+  // ── INIT ──
+  async function init() {
+    const token      = sessionStorage.getItem('geslasoft_token');
+    const usuarioStr = sessionStorage.getItem('geslasoft_usuario');
+
+    if (!token || !usuarioStr) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    const usuario = JSON.parse(usuarioStr);
+    const nombreCorto = usuario.nombre_corto || usuario.nombre_completo?.split(' ')[0] || '—';
+
+    // Poblar header y bienvenida
+    document.getElementById('usuarioNombre').textContent  = nombreCorto;
+    document.getElementById('usuarioAvatar').textContent  = (usuario.nombre_completo || '?')[0].toUpperCase();
+    document.getElementById('bienvenidaNombre').textContent = nombreCorto;
+
+    // Mostrar contenido
+    document.getElementById('estadoCargando').style.display = 'none';
+    const contenido = document.getElementById('contenido');
+    contenido.style.display = 'flex';
+
+    try {
+      // Cargar solicitudes del usuario por email
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/solicitudes?usuario_id=eq.${usuario.id}&select=id,nro_solicitud,laboratorio_codigo,estado,creado_en,observaciones&order=creado_en.desc`,
+        {
+          headers: {
+            'apikey':        SUPABASE_ANON,
+            'Authorization': `Bearer ${token}`,
+          }
+        }
+      );
+      const solicitudes = await res.json();
+      console.log('solicitudes:', solicitudes);
+      console.log('usuario.id:', usuario.id);
+
+
+
+
+      // Cargar conteo de ensayos por solicitud
+
+      const ids = solicitudes.map(s => s.id);
+      let ensayosMap = {};
+
+      if (ids.length > 0) {
+        const ensRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/solicitud_items?select=solicitud_id,ensayo_nombre,norma,cantidad&solicitud_id=in.(${ids.join(',')})`,
+          {
+            headers: {
+              'apikey':        SUPABASE_ANON,
+              'Authorization': `Bearer ${token}`,
+            }
+          }
+        );
+        const ensayos = await ensRes.json();
+        ensayos.forEach(e => {
+          if (!ensayosMap[e.solicitud_id]) ensayosMap[e.solicitud_id] = [];
+          ensayosMap[e.solicitud_id].push(e);
+        });
+      }
+
+    // Cargar datos de laboratorios
+      const codigosLab = [...new Set(solicitudes.map(s => s.laboratorio_codigo).filter(Boolean))];
+      let labMap = {};
+
+      if (codigosLab.length > 0) {
+        const labRes = await fetch(
+          `${SUPABASE_URL}/rest/v1/laboratorios?codigo=in.(${codigosLab.join(',')})&select=codigo,nombre,logo_url,distrito,departamento`,
+          {
+            headers: {
+              'apikey':        SUPABASE_ANON,
+              'Authorization': `Bearer ${token}`,
+            }
+          }
+        );
+        const labs = await labRes.json();
+        labs.forEach(l => { labMap[l.codigo] = l; });
+      }
+
+      // Combinar
+      const solicitudesConEnsayos = solicitudes.map(s => ({
+        ...s,
+        ensayos: ensayosMap[s.id] || [],
+        total_ensayos: (ensayosMap[s.id] || []).length,
+        laboratorio: labMap[s.laboratorio_codigo] || null,
+      }));
+
+      renderSolicitudes(solicitudesConEnsayos);
+
+    } catch (err) {
+      console.error(err);
+      document.getElementById('cargandoSolicitudes').innerHTML =
+        `<p style="color:var(--danger); font-size:13px;">Error al cargar solicitudes.</p>`;
+    }
+  }
+
+  // ── SALIR ──
+  document.getElementById('btnSalir').addEventListener('click', () => {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+  });
+
+  init();
+  console.log('dentro de init');
+</script>
+
+</body>
+</html>

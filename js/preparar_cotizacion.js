@@ -1,0 +1,571 @@
+/* ══════════════════════════════════════════
+   PREPARAR_COTIZACION.JS
+   Lógica de pages/panel_lab/preparar_cotizacion.html
+   ══════════════════════════════════════════ */
+
+const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
+
+// ── ESTADO LOCAL ──
+let solicitud   = null;
+let items       = [];
+let moneda      = 'USD';
+let tipoCambio  = 3.75;
+
+// ── DOM ──
+const estadoCargando = document.getElementById('estadoCargando');
+const estadoError    = document.getElementById('estadoError');
+const errorMsg       = document.getElementById('errorMsg');
+const cotContenido   = document.getElementById('cotContenido');
+const headerSub      = document.getElementById('headerSub');
+const ensayosContainer = document.getElementById('ensayosContainer');
+const btnUSD         = document.getElementById('btnUSD');
+const btnPEN         = document.getElementById('btnPEN');
+const campoTipoCambio= document.getElementById('campoTipoCambio');
+const tipoCambioInput= document.getElementById('tipoCambio');
+const totalSubtotal  = document.getElementById('totalSubtotal');
+const totalIgv       = document.getElementById('totalIgv');
+const totalFinal     = document.getElementById('totalFinal');
+const elaboradoInput = document.getElementById('elaboradoPor');
+const notasInput     = document.getElementById('notas');
+const btnEnviar      = document.getElementById('btnEnviar');
+
+// ── HEADERS COMUNES ──
+function authHeaders(token) {
+  return {
+    'apikey':        SUPABASE_ANON,
+    'Authorization': `Bearer ${token}`,
+    'Content-Type':  'application/json',
+  };
+}
+
+// ── TOAST ──
+let toastTimer;
+function mostrarToast(msg, tipo = 'accent') {
+  const colores = {
+    accent:  { bg: '#00897B', color: '#fff' },
+    warning: { bg: '#F59E0B', color: '#fff' },
+    danger:  { bg: '#EF4444', color: '#fff' },
+  };
+  const c = colores[tipo] || colores.accent;
+  const toast = document.getElementById('toastMsg');
+  toast.textContent = msg;
+  toast.style.background = c.bg;
+  toast.style.color = c.color;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2800);
+}
+
+// ── LEER solicitud_id DE LA URL ──
+function obtenerSolicitudId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('solicitud_id');
+}
+
+// ── CARGAR SOLICITUD + ITEMS ──
+async function cargarSolicitud(token, solicitudId) {
+  const urlSol = `${SUPABASE_URL}/rest/v1/solicitudes`
+    + `?id=eq.${solicitudId}&select=*`;
+  const resSol = await fetch(urlSol, { headers: authHeaders(token) });
+  if (!resSol.ok) throw new Error(`Error al cargar solicitud (${resSol.status})`);
+  const solData = await resSol.json();
+  if (!solData.length) throw new Error('Solicitud no encontrada');
+
+  const urlItems = `${SUPABASE_URL}/rest/v1/solicitud_items`
+    + `?solicitud_id=eq.${solicitudId}&order=area_disciplina.asc,ensayo_nombre.asc`;
+  const resItems = await fetch(urlItems, { headers: authHeaders(token) });
+  if (!resItems.ok) throw new Error(`Error al cargar ensayos (${resItems.status})`);
+  const itemsData = await resItems.json();
+
+  return { solicitud: solData[0], items: itemsData };
+}
+
+// ── RENDER INFO SOLICITUD ──
+function renderInfoSolicitud() {
+  document.getElementById('infoNroSolicitud').textContent = solicitud.nro_solicitud || '—';
+  document.getElementById('infoCliente').textContent =
+    solicitud.empresa_solicitante || solicitud.nombre_solicitante || '—';
+  document.getElementById('infoSolicitante').textContent = solicitud.nombre_solicitante || '—';
+  headerSub.textContent = solicitud.nro_solicitud || 'Solicitud';
+}
+
+// ── RENDER ENSAYOS ──
+function renderEnsayos() {
+  ensayosContainer.innerHTML = '';
+  items.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'ensayo-row';
+    row.innerHTML = `
+      <div class="field">
+        <label>Descripción</label>
+        <input type="text" class="ensayo-desc" data-idx="${idx}" value="${item.ensayo_nombre}" />
+      </div>
+      <div class="ensayo-row-meta">
+        <span class="ensayo-norma">${item.norma || ''}</span>
+        <span class="ensayo-cantidad">× ${item.cantidad}</span>
+      </div>
+      <div class="ensayo-row-precio">
+        <label>Precio unitario</label>
+        <input type="number" class="ensayo-precio-input precio-input" data-idx="${idx}"
+               step="0.01" min="0" placeholder="0.00" />
+      </div>
+    `;
+    ensayosContainer.appendChild(row);
+  });
+
+  // Eventos
+  ensayosContainer.querySelectorAll('.precio-input').forEach(input => {
+    input.addEventListener('input', calcularTotales);
+  });
+}
+
+// ── CALCULAR TOTALES ──
+function calcularTotales() {
+  let subtotal = 0;
+  ensayosContainer.querySelectorAll('.precio-input').forEach((input, idx) => {
+    const precio   = parseFloat(input.value) || 0;
+    const cantidad = items[idx].cantidad || 1;
+    subtotal += precio * cantidad;
+  });
+  const igv   = subtotal * 0.18;
+  const total = subtotal + igv;
+  const simbolo = moneda === 'USD' ? 'USD' : 'S/.';
+
+  totalSubtotal.textContent = `${simbolo} ${subtotal.toFixed(2)}`;
+  totalIgv.textContent      = `${simbolo} ${igv.toFixed(2)}`;
+  totalFinal.textContent    = `${simbolo} ${total.toFixed(2)}`;
+}
+
+// ── TOGGLE MONEDA ──
+function seleccionarMoneda(nuevaMoneda) {
+  moneda = nuevaMoneda;
+  btnUSD.classList.toggle('active', moneda === 'USD');
+  btnPEN.classList.toggle('active', moneda === 'PEN');
+  campoTipoCambio.classList.toggle('hidden', moneda !== 'PEN');
+  calcularTotales();
+}
+btnUSD.addEventListener('click', () => seleccionarMoneda('USD'));
+btnPEN.addEventListener('click', () => seleccionarMoneda('PEN'));
+tipoCambioInput.addEventListener('input', () => {
+  const tc = parseFloat(tipoCambioInput.value);
+  if (tc > 0) tipoCambio = tc;
+});
+
+
+
+// ── GENERAR PDF (jsPDF) ──
+function obtenerDatosFormulario() {
+  const precios = [];
+  const descripciones = [];
+  ensayosContainer.querySelectorAll('.precio-input').forEach((input, idx) => {
+    precios[idx] = parseFloat(input.value) || 0;
+  });
+  ensayosContainer.querySelectorAll('.ensayo-desc').forEach((input, idx) => {
+    descripciones[idx] = input.value.trim() || items[idx].ensayo_nombre;
+  });
+  const subtotal = precios.reduce((sum, p, idx) => sum + p * (items[idx].cantidad || 1), 0);
+  const igv = subtotal * 0.18;
+  const total = subtotal + igv;
+  return { precios, descripciones, subtotal, igv, total };
+}
+
+function cargarImagenComoBase64(url) {
+  return new Promise((resolve) => {
+    if (!url) { resolve(null); return; }
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        resolve(null); // CORS u otro error → fallback a texto
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+async function generarPdf(nroCotizacionMostrar) {
+  const usuarioSesion = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
+  const lab = usuarioSesion?.laboratorios || null;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+
+  const azulOsc  = [0, 51, 102];
+  const azulFila = [234, 243, 251];
+  const grisClr  = [245, 248, 250];
+  const gris400  = [170, 170, 170];
+  const gris700  = [85, 85, 85];
+
+  const marginX = 14;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - marginX * 2;
+
+  const { precios, descripciones, subtotal, igv, total } = obtenerDatosFormulario();
+  const simbolo = moneda === 'USD' ? 'USD' : 'S/.';
+
+  let logoBase64 = null;
+  if (lab?.logo_url && !lab.logo_url.startsWith('data:image')) {
+    logoBase64 = await cargarImagenComoBase64(lab.logo_url);
+  } else if (lab?.logo_url) {
+    logoBase64 = lab.logo_url; // ya es base64
+  }
+
+  // ── ENCABEZADO ──
+  doc.setDrawColor(...gris400);
+  doc.rect(marginX, 14, contentWidth, 22);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Cotización de Servicios de Laboratorio', marginX + 3, 22);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`Cotización No.: ${nroCotizacionMostrar}`, marginX + 3, 28);
+
+  if (logoBase64) {
+    try {
+      doc.addImage(logoBase64, 'PNG', pageWidth - marginX - 28, 16, 26, 18, undefined, 'FAST');
+    } catch (e) { /* si falla, no rompe el PDF */ }
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(...azulOsc);
+    doc.text(lab?.nombre_alternativo || lab?.nombre || 'LABORATORIO', pageWidth - marginX - 3, 22, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+  }
+
+  // ── BLOQUE CLIENTE ──
+  let y = 40;
+  const mitad = contentWidth / 2;
+  doc.setDrawColor(...gris400);
+  doc.rect(marginX, y, contentWidth, 28);
+  doc.line(marginX + mitad, y, marginX + mitad, y + 28);
+
+  const izq = [
+    ['Cliente:', solicitud.empresa_solicitante || solicitud.nombre_solicitante || ''],
+    ['RUC o DNI:', solicitud.ruc_dni || ''],
+    ['Dirección:', solicitud.direccion || ''],
+    ['N° Solicitud:', solicitud.nro_solicitud || ''],
+  ];
+  const der = [
+    ['Solicitante:', solicitud.nombre_solicitante || ''],
+    ['Cargo:', solicitud.cargo_solicitante || ''],
+    ['Correo:', solicitud.email || ''],
+    ['Teléfono:', solicitud.telefono || ''],
+  ];
+
+  function pintarBloque(filas, xBase) {
+    let yy = y;
+    const rowH = 7;
+    filas.forEach((fila, idx) => {
+      if (idx % 2 === 0) {
+        doc.setFillColor(...azulFila);
+        doc.rect(xBase, yy, mitad, rowH, 'F');
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(0, 0, 0);
+      doc.text(fila[0], xBase + 2, yy + 4.5);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(fila[1]).slice(0, 60), xBase + 26, yy + 4.5);
+      yy += rowH;
+    });
+  }
+  pintarBloque(izq, marginX);
+  pintarBloque(der, marginX + mitad);
+
+  // ── TABLA DE ÍTEMS ──
+  y += 32;
+  const filasTabla = items.map((item, idx) => {
+    const precio = precios[idx] || 0;
+    const sub = precio * (item.cantidad || 1);
+    return [
+      String(idx + 1),
+      descripciones[idx],
+      item.norma || '',
+      String(item.cantidad),
+      precio > 0 ? precio.toFixed(2) : '',
+      sub > 0 ? sub.toFixed(2) : '',
+    ];
+  });
+
+  doc.autoTable({
+    startY: y,
+    margin: { left: marginX, right: marginX },
+    head: [['Item', 'Descripción del Servicio Ofertado', 'Norma de Referencia', 'Cantidad', `Precio Unitario (${simbolo})`, `Sub Total (${simbolo})`]],
+    body: filasTabla,
+    theme: 'grid',
+    headStyles: { fillColor: azulOsc, textColor: [255, 255, 255], fontSize: 8, halign: 'center' },
+    bodyStyles: { fontSize: 8, textColor: [0, 0, 0] },
+    alternateRowStyles: { fillColor: grisClr },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: contentWidth - 10 - 28 - 16 - 24 - 24 },
+      2: { cellWidth: 28, halign: 'center' },
+      3: { cellWidth: 16, halign: 'center' },
+      4: { cellWidth: 24, halign: 'center' },
+      5: { cellWidth: 24, halign: 'center' },
+    },
+  });
+
+  // ── TOTALES ──
+  let yTot = doc.lastAutoTable.finalY + 6;
+  const boxW = 60;
+  const boxX = marginX + contentWidth - boxW;
+
+  function filaTotal(label, valor, bg, blanco) {
+    doc.setFillColor(...bg);
+    doc.rect(boxX, yTot, boxW, 7, 'F');
+    doc.setDrawColor(...gris400);
+    doc.rect(boxX, yTot, boxW, 7);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...(blanco ? [255, 255, 255] : [0, 0, 0]));
+    doc.text(label, boxX + 3, yTot + 5);
+    doc.text(valor, boxX + boxW - 3, yTot + 5, { align: 'right' });
+    yTot += 7;
+  }
+  filaTotal(`SUBTOTAL (${simbolo})`, subtotal.toFixed(2), grisClr, false);
+  filaTotal('I.G.V. (18%)', igv.toFixed(2), grisClr, false);
+  filaTotal(`Total a Facturar (${simbolo})`, total.toFixed(2), azulOsc, true);
+
+  // ── PIE ──
+  yTot += 10;
+  const fecha = new Date().toISOString().slice(0, 10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...gris700);
+  const pieX = pageWidth - marginX - 60;
+  doc.text('Elaborado por:', pieX, yTot, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.text(elaboradoInput.value.trim() || '—', pieX + 3, yTot);
+  yTot += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Versión:', pieX, yTot, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.text('01', pieX + 3, yTot);
+  yTot += 5;
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fecha:', pieX, yTot, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.text(fecha, pieX + 3, yTot);
+
+  // ── NOTAS ──
+  if (notasInput.value.trim()) {
+    yTot += 10;
+    doc.setDrawColor(...gris400);
+    doc.line(marginX, yTot, marginX + contentWidth, yTot);
+    yTot += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Nota y Comentarios', marginX, yTot);
+    yTot += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(...gris700);
+    const notasLines = doc.splitTextToSize(notasInput.value.trim(), contentWidth);
+    doc.text(notasLines, marginX, yTot);
+  }
+
+  return doc;
+}
+
+async function verPdf() {
+  if (items.length === 0) {
+    mostrarToast('No hay ensayos para mostrar.', 'warning');
+    return;
+  }
+  const btnVerPdf = document.getElementById('btnVerPdf');
+  btnVerPdf.disabled = true;
+  btnVerPdf.textContent = 'Generando...';
+  try {
+    const nroPreview = solicitud.nro_solicitud
+      ? `(Vista previa — ${solicitud.nro_solicitud})`
+      : '(Vista previa)';
+    const doc = await generarPdf(nroPreview);
+    doc.output('dataurlnewwindow');
+  } catch (err) {
+    console.error(err);
+    mostrarToast('Error al generar el PDF.', 'danger');
+  } finally {
+    btnVerPdf.disabled = false;
+    btnVerPdf.textContent = 'Ver PDF';
+  }
+}
+document.getElementById('btnVerPdf').addEventListener('click', verPdf);
+
+
+
+
+
+
+
+// ── GENERAR NRO COTIZACIÓN (consecutivos por laboratorio/año) ──
+// La numeración real la calcula la columna generada en Supabase (igual que nro_solicitud).
+// Aquí solo armamos los datos para el INSERT; el trigger se encarga del correlativo.
+
+// ── ENVIAR COTIZACIÓN ──
+async function enviarCotizacion() {
+  if (items.length === 0) {
+    mostrarToast('No hay ensayos para cotizar.', 'warning');
+    return;
+  }
+
+  const precios = [];
+  let huboError = false;
+  ensayosContainer.querySelectorAll('.precio-input').forEach((input, idx) => {
+    const precio = parseFloat(input.value);
+    if (isNaN(precio) || precio <= 0) huboError = true;
+    precios[idx] = precio || 0;
+  });
+
+  if (huboError) {
+    mostrarToast('Completa todos los precios unitarios.', 'warning');
+    return;
+  }
+
+  btnEnviar.disabled = true;
+  btnEnviar.textContent = 'Enviando...';
+
+  try {
+    const token = sessionStorage.getItem('geslasoft_token');
+    const usuario = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
+
+    const descripciones = [];
+    ensayosContainer.querySelectorAll('.ensayo-desc').forEach((input, idx) => {
+      descripciones[idx] = input.value.trim() || items[idx].ensayo_nombre;
+    });
+
+    const subtotal = precios.reduce((sum, p, idx) => sum + p * (items[idx].cantidad || 1), 0);
+    const igv   = subtotal * 0.18;
+    const total = subtotal + igv;
+
+    // ── 1. Crear cotización ──
+    // Nota: subtotal/igv/total NO se guardan en cotizaciones (no existen esas columnas).
+    // Se calculan al vuelo a partir de cotizacion_items.precio_total cuando se necesiten mostrar.
+    const resCot = await fetch(`${SUPABASE_URL}/rest/v1/cotizaciones`, {
+    method: 'POST',
+    headers: { ...authHeaders(token), 'Prefer': 'return=representation' },
+    body: JSON.stringify({
+        solicitud_id:       solicitud.id,
+        organizacion_id:    solicitud.organizacion_id,
+        laboratorio_codigo: solicitud.laboratorio_codigo || null,
+        laboratorio_id:     solicitud.laboratorio_id || null,
+        nombre_cliente:     solicitud.nombre_solicitante,
+        empresa_cliente:    solicitud.empresa_solicitante || null,
+        ruc_cliente:        solicitud.ruc_dni || null,
+        email_cliente:      solicitud.email || null,
+        moneda,
+        incluye_igv:        true,
+        plazo_entrega_dias: 0,
+        validez_dias:       15,
+        notas:              notasInput.value.trim() || null,
+        estado:             'enviada',
+        version:             1,
+        enviada_en:          new Date().toISOString(),
+    }),
+    });
+
+    const cotText = await resCot.text();
+    const cotData = cotText ? JSON.parse(cotText) : null;
+    if (!resCot.ok) throw new Error(cotData?.message || 'Error al crear la cotización');
+
+    const cotizacion = Array.isArray(cotData) ? cotData[0] : cotData;
+
+    // ── 2. Crear cotizacion_items ──
+    // precio_total es columna generada (cantidad * precio_unitario), no se envía.
+    const resItems = await fetch(`${SUPABASE_URL}/rest/v1/cotizacion_items`, {
+    method: 'POST',
+    headers: { ...authHeaders(token), 'Prefer': 'return=representation' },
+    body: JSON.stringify(items.map((item, idx) => ({
+        cotizacion_id:      cotizacion.id,
+        organizacion_id:    solicitud.organizacion_id,
+        solicitud_item_id:  item.id,
+        area_disciplina:    item.area_disciplina,
+        ensayo_nombre:      descripciones[idx],
+        norma:              item.norma || '',
+        cantidad:           item.cantidad,
+        precio_unitario:    precios[idx],
+    }))),
+    });
+
+    if (!resItems.ok) {
+      const itemsErr = await resItems.text();
+      throw new Error(itemsErr || 'Error al guardar los ítems de la cotización');
+    }
+
+    mostrarToast(`Cotización ${cotizacion.nro_cotizacion || ''} creada correctamente`, 'accent');
+
+    setTimeout(() => {
+      window.location.href = '../panel_lab/requerimiento.html';
+    }, 1200);
+
+  } catch (err) {
+    console.error(err);
+    mostrarToast(err.message || 'Error al enviar la cotización.', 'danger');
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = 'Enviar cotización';
+  }
+}
+btnEnviar.addEventListener('click', enviarCotizacion);
+
+// ── INIT ──
+async function init() {
+  const token = sessionStorage.getItem('geslasoft_token');
+  const usuarioStr = sessionStorage.getItem('geslasoft_usuario');
+
+  if (!token || !usuarioStr) {
+    window.location.href = '../login.html';
+    return;
+  }
+
+  const usuario = JSON.parse(usuarioStr);
+  elaboradoInput.value = usuario.nombre_corto || usuario.nombre_completo || '';
+
+  const solicitudId = obtenerSolicitudId();
+  if (!solicitudId) {
+    estadoCargando.classList.add('hidden');
+    estadoError.classList.remove('hidden');
+    errorMsg.textContent = 'No se especificó la solicitud a cotizar.';
+    return;
+  }
+
+  try {
+    const data = await cargarSolicitud(token, solicitudId);
+    solicitud = data.solicitud;
+    items     = data.items;
+
+    if (items.length === 0) {
+      estadoCargando.classList.add('hidden');
+      estadoError.classList.remove('hidden');
+      errorMsg.textContent = 'Esta solicitud no tiene ensayos registrados.';
+      return;
+    }
+
+    renderInfoSolicitud();
+    renderEnsayos();
+    calcularTotales();
+
+    estadoCargando.classList.add('hidden');
+    cotContenido.classList.remove('hidden');
+
+  } catch (err) {
+    console.error(err);
+    estadoCargando.classList.add('hidden');
+    estadoError.classList.remove('hidden');
+    errorMsg.textContent = err.message || 'No se pudo cargar la solicitud.';
+  }
+}
+
+init();

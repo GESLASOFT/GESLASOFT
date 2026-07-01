@@ -522,40 +522,39 @@ btnModalAceptar.addEventListener('click', () => {
 
 
 
+
 // ── INIT ──
 window.addEventListener('DOMContentLoaded', async () => {
-  const labGuardado = localStorage.getItem('geslasoft_lab');
-    console.log('labGuardado:', labGuardado);
+  const usuarioSesion = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
 
-
-
-
-
+  if (usuarioSesion && usuarioSesion.laboratorios) {
+    labActual = usuarioSesion.laboratorios;
+    localStorage.setItem('geslasoft_lab', JSON.stringify(labActual));
+  } else {
+    const labGuardado = localStorage.getItem('geslasoft_lab');
     if (labGuardado) {
       labActual = JSON.parse(labGuardado);
-
-      document.querySelector('.lab-name').textContent     = labActual.nombre    || 'Laboratorio';
-      document.querySelector('.lab-location').textContent = labActual.ubicacion || '';
-      document.querySelector('.lab-label').textContent    = labActual.codigo
-        ? `LABORATORIO · ${labActual.codigo}`
-        : 'LABORATORIO SELECCIONADO';
-
-      // ── LOGO ──
-      const labIcon = document.querySelector('.lab-icon');
-      if (labActual.logo_url) {
-        labIcon.innerHTML = `<img src="${labActual.logo_url}" alt="${labActual.nombre}" />`;
-      }
-
-      await cargarEnsayos(labActual.id);
+    } else {
+      window.location.href = 'laboratorios.html';
+      return;
     }
-  
-  else {
-    window.location.href = 'laboratorios.html';
-    return;
   }
 
+  document.querySelector('.lab-name').textContent     = labActual.nombre    || 'Laboratorio';
+  document.querySelector('.lab-location').textContent = labActual.direccion || '';
+  document.querySelector('.lab-label').textContent    = labActual.codigo
+    ? `LABORATORIO · ${labActual.codigo}`
+    : 'LABORATORIO SELECCIONADO';
+
+  const labIcon = document.querySelector('.lab-icon');
+  if (labActual.logo_url) {
+    labIcon.innerHTML = `<img src="${labActual.logo_url}" alt="${labActual.nombre}" />`;
+  }
+
+  await cargarEnsayos(labActual.id);
   precargarDatosRecurrentes();
 });
+
 
 // ── VOLVER A SELECCIONAR LABORATORIO ──
 document.getElementById('cardLab')?.addEventListener('click', () => {

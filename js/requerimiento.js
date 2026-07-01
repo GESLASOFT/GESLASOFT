@@ -111,6 +111,11 @@ function crearCard(sol) {
   }[estado] || estado;
 
   const { dia: aprobDia } = formatearFecha(sol.aprobado_en);
+  const tieneCotizacion = sol.cotizaciones && sol.cotizaciones.length > 0;
+  const botonCotizarHtml = tieneCotizacion
+    ? `<span class="sol-badge-atendido">Atendido</span>`
+    : `<a href="../panel_lab/preparar_cotizacion.html?solicitud_id=${sol.id}" class="btn-cotizar">Cotizar</a>`;
+
 
   const card = document.createElement('div');
   card.className = 'sol-card';
@@ -128,21 +133,26 @@ function crearCard(sol) {
         </div>
         ${proyecto ? `<div class="sol-proyecto">${proyecto}</div>` : ''}
       </div>
+
+
+
       <div class="sol-card-meta">
         ${origen ? `<span class="sol-origen-badge">${origen}</span>` : ''}
         <div class="sol-fecha">
           <span class="sol-fecha-dia">${dia}</span>
           <span class="sol-fecha-hora">${hora}</span>
         </div>
+        ${botonCotizarHtml}
         <button class="btn-detalle" data-id="${sol.id}">
           Ver
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-               stroke="currentColor" stroke-width="2.5"
-               stroke-linecap="round" stroke-linejoin="round">
+              stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </button>
       </div>
+
     </div>
 
     <!-- PANEL EXPANDIBLE -->
@@ -321,7 +331,7 @@ function poblarAnios() {
 async function cargarSolicitudes(token, organizacionId) {
   const url = `${SUPABASE_URL}/rest/v1/solicitudes`
     + `?organizacion_id=eq.${organizacionId}`
-    + `&select=*,usuarios(nombre_completo)`
+    + `&select=*,usuarios(nombre_completo),cotizaciones(id,nro_cotizacion,estado,version)`
     + `&order=creado_en.desc`;
 
   const res = await fetch(url, {

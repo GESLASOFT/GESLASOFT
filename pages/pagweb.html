@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GESLASOFT: software y consultoría para laboratorios de ensayo ISO/IEC 17025." />
+  <title>GESLASOFT | Software y Consultoría para laboratorios de ensayo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#inicio" aria-label="Ir al inicio">
+        <span class="brand-icon" aria-hidden="true">G</span>
+        <span class="brand-text">
+          <strong>GESLASOFT</strong>
+          <small>LIMS · ISO/IEC 17025</small>
+        </span>
+      </a>
+      <button class="menu-button" id="menuButton" type="button"
+        aria-expanded="false" aria-controls="mainNavigation"
+        aria-label="Abrir menú de navegación">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="main-navigation" id="mainNavigation" aria-label="Navegación principal">
+        <a href="#inicio">Inicio</a>
+        <a href="#servicios">Servicios</a>
+        <a href="#contacto">Contacto</a>
+        <a class="nav-cta" href="#contacto">Solicitar demostración</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="hero" id="inicio">
+      <div class="container hero-simple">
+        <span class="eyebrow">Software y consultoría especializada</span>
+        <h1>
+          Soluciones para laboratorios de ensayo con
+          <span>orden, trazabilidad y control</span>
+        </h1>
+        <p class="hero-description">
+          Ofrecemos servicios de consultoría, capacitación e implementación de software
+          diseñados para optimizar los procesos de tu laboratorio y apoyar la gestión
+          conforme a la norma ISO/IEC 17025.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#contacto">Solicitar una demostración</a>
+          <a class="button button-secondary" href="#servicios">Ver servicios</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICIOS -->
+    <section class="section services-section" id="servicios">
+      <div class="container">
+        <div class="section-heading">
+          <span class="eyebrow">Lo que ofrecemos</span>
+          <h2>Servicios para laboratorios de ensayo</h2>
+          <p>
+            Desde la consultoría técnica hasta la implementación de software,
+            acompañamos a tu laboratorio en cada etapa de su desarrollo y acreditación.
+          </p>
+        </div>
+
+        <div class="services-grid">
+
+          <article class="service-card">
+            <img
+              src="https://picsum.photos/seed/auditoria/600/350"
+              alt="Auditoría de diagnóstico en laboratorio"
+            />
+            <div class="service-body">
+              <h3>Auditoría de diagnóstico</h3>
+              <p>Evaluamos el estado actual de tu laboratorio frente a los requisitos de la norma ISO/IEC 17025, identificando brechas y oportunidades de mejora.</p>
+              <a href="#" class="button button-primary service-btn">Ver más</a>
+            </div>
+          </article>
+
+          <article class="service-card">
+            <img
+              src="https://picsum.photos/seed/iso17025/600/350"
+              alt="Implementación ISO/IEC 17025"
+            />
+            <div class="service-body">
+              <h3>Implementación ISO/IEC 17025</h3>
+              <p>Acompañamiento completo para diseñar, documentar e implementar el sistema de gestión de tu laboratorio conforme a la norma internacional.</p>
+              <a href="#" class="button button-primary service-btn">Ver más</a>
+            </div>
+          </article>
+
+          <article class="service-card">
+            <img
+              src="https://picsum.photos/seed/capacitacion/600/350"
+              alt="Capacitaciones técnicas"
+            />
+            <div class="service-body">
+              <h3>Capacitaciones técnicas</h3>
+              <p>Formación práctica en estándares NTP, ASTM y MTC para el personal técnico y de calidad, adaptada a los ensayos y procesos de tu laboratorio.</p>
+              <a href="#" class="button button-primary service-btn">Ver más</a>
+            </div>
+          </article>
+
+          <article class="service-card">
+            <img
+              src="https://picsum.photos/seed/auditoriainterna/600/350"
+              alt="Auditorías internas"
+            />
+            <div class="service-body">
+              <h3>Auditorías internas</h3>
+              <p>Realizamos auditorías internas planificadas para verificar el cumplimiento del sistema de gestión y preparar al laboratorio para evaluaciones externas.</p>
+              <a href="#" class="button button-primary service-btn">Ver más</a>
+            </div>
+          </article>
+
+          <article class="service-card service-card-highlight">
+            <img
+              src="https://picsum.photos/seed/software/600/350"
+              alt="Software a medida para laboratorios"
+            />
+            <div class="service-body">
+              <h3>Software a medida</h3>
+              <p>Desarrollamos e implementamos soluciones de software adaptadas a los flujos, procesos y necesidades específicas de cada laboratorio de ensayo.</p>
+              <a href="software.html" class="button button-primary service-btn">Ver más</a>
+            </div>
+          </article>
+
+          <article class="service-card service-card-free">
+            <div class="service-free-badge">Gratuito</div>
+            <img
+              src="https://picsum.photos/seed/directorio/600/350"
+              alt="Directorio de laboratorios acreditados"
+            />
+            <div class="service-body">
+              <h3>Directorio de laboratorios acreditados</h3>
+              <p>Consulta laboratorios de ensayo acreditados por INACAL según tipo de servicio, ubicación o alcance. Información referencial de fuente pública.</p>
+              <a href="#" id="directorioBtn" class="button button-primary service-btn">Consultar el directorio</a>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACTO -->
+    <section class="section contact-section" id="contacto">
+      <div class="container contact-card">
+        <div>
+          <span class="eyebrow eyebrow-light">Conoce la plataforma</span>
+          <h2>Descubre cómo GESLASOFT puede adaptarse a tu laboratorio</h2>
+          <p>Solicita una demostración y revisa las funciones que podrían incorporarse a tus procesos.</p>
+        </div>
+        <a class="button button-light" href="mailto:contacto@geslasoft.com">Contactar a GESLASOFT</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand brand-footer" href="#inicio">
+          <span class="brand-icon" aria-hidden="true">G</span>
+          <span class="brand-text">
+            <strong>GESLASOFT</strong>
+            <small>Software para laboratorios de ensayo</small>
+          </span>
+        </a>
+        <p>Plataforma de gestión orientada a la digitalización y trazabilidad de procesos de laboratorio.</p>
+      </div>
+      <div>
+        <strong>Servicios</strong>
+        <a href="#servicios">Auditoría de diagnóstico</a>
+        <a href="#servicios">Implementación ISO/IEC 17025</a>
+        <a href="#servicios">Capacitaciones técnicas</a>
+        <a href="#servicios">Auditorías internas</a>
+        <a href="software.html">Software a medida</a>
+        <a href="pages/login.html">Directorio gratuito</a>
+      </div>
+      <div>
+        <strong>Contacto</strong>
+        <a href="mailto:geslasoft@gmail.com">geslasoft@gmail.com</a>
+        <span>Lima, Perú</span>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      <span>© <span id="currentYear"></span> GESLASOFT. Todos los derechos reservados.</span>
+      <span>Privacidad · Términos</span>
+    </div>
+  </footer>
+
+  <!-- MODAL DIRECTORIO -->
+  <div class="modal-overlay" id="modalDirectorio" role="dialog" aria-modal="true" aria-labelledby="modalTitulo">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose" aria-label="Cerrar">✕</button>
+      <h3 id="modalTitulo">¿Qué directorio deseas consultar?</h3>
+      <p>Selecciona la fuente que necesitas revisar.</p>
+      <div class="modal-options">
+
+        <a href="https://www.inacal.gob.pe/acreditacion/categoria/acreditados"
+           target="_blank" rel="noopener noreferrer" class="modal-card">
+          <div class="modal-card-icon">🏛️</div>
+          <strong>Directorio INACAL</strong>
+          <span>Laboratorios acreditados oficialmente. Fuente pública del organismo nacional.</span>
+          <div class="button button-primary modal-btn">Ir al sitio oficial ↗</div>
+        </a>
+
+        <a href="../pages/login.html" class="modal-card">
+          <div class="modal-card-icon">🗂️</div>
+          <img height"50px" width="50px" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRnxwigIIktj1SHnnql4wfQGV8nAy9ru4ZDIigouCRo1Mr1WGpE2g6IJrFfnqiZ4kHPiHroGTSAuQK7shMb1Monc_1zhQV_VnPq322BECUW&s=10" alt="">
+          <strong>Directorio GESLASOFT</strong>
+          <span>Consulta nuestro directorio organizado y filtrable de laboratorios acreditados.</span>
+          <div class="button button-primary modal-btn">Ingresar</div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    // Menú móvil
+    const btn = document.getElementById('menuButton');
+    const nav = document.getElementById('mainNavigation');
+    btn.addEventListener('click', () => {
+      const open = nav.classList.toggle('is-open');
+      btn.setAttribute('aria-expanded', open);
+    });
+
+    // Modal directorio
+    const modal = document.getElementById('modalDirectorio');
+    const modalClose = document.getElementById('modalClose');
+    const dirBtn = document.getElementById('directorioBtn');
+
+    dirBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      modal.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    });
+
+    function cerrarModal() {
+      modal.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+
+    modalClose.addEventListener('click', cerrarModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cerrarModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') cerrarModal();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preparar Cotización · GESLASOFT</title>
+  <link rel="stylesheet" href="../../css/base.css" />
+  <link rel="stylesheet" href="../../css/preparar_cotizacion.css" />
+</head>
+<body>
+
+<div class="cot-page">
+
+  <!-- ── HEADER ── -->
+  <header class="panel-header">
+    <button class="btn-volver-icon" onclick="history.back()" aria-label="Volver">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-module-info">
+      <div class="header-module-title">Preparar Cotización</div>
+      <div class="header-module-sub" id="headerSub">Cargando solicitud...</div>
+    </div>
+  </header>
+
+  <!-- ── CARGANDO ── -->
+  <div class="cot-loading" id="estadoCargando">
+    <div class="cot-spinner"></div>
+    <span>Cargando datos de la solicitud...</span>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div class="cot-error hidden" id="estadoError">
+    <span id="errorMsg">No se pudo cargar la solicitud.</span>
+  </div>
+
+  <!-- ── CONTENIDO ── -->
+  <main class="cot-content hidden" id="cotContenido">
+
+    <!-- CARD: Info solicitud -->
+    <div class="card">
+      <div class="card-header">
+        <span>Información de la solicitud</span>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <span class="info-label">N° Solicitud:</span>
+          <span class="info-valor" id="infoNroSolicitud">—</span>
+          <span class="info-label">Cliente:</span>
+          <span class="info-valor" id="infoCliente">—</span>
+          <span class="info-label">Solicitante:</span>
+          <span class="info-valor" id="infoSolicitante">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD: Moneda -->
+    <div class="card">
+      <div class="card-header"><span>Moneda</span></div>
+      <div class="card-body">
+        <div class="moneda-toggle">
+          <button type="button" class="moneda-btn active" data-moneda="USD" id="btnUSD">🇺🇸 USD</button>
+          <button type="button" class="moneda-btn" data-moneda="PEN" id="btnPEN">🇵🇪 Soles</button>
+        </div>
+        <div class="field hidden" id="campoTipoCambio">
+          <label for="tipoCambio">Tipo de cambio (USD → PEN)</label>
+          <input type="number" id="tipoCambio" step="0.01" value="3.75" />
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD: Ensayos y precios -->
+    <div class="card">
+      <div class="card-header"><span>Ensayos y precios</span></div>
+      <div class="card-body" id="ensayosContainer">
+        <!-- Generado por JS -->
+      </div>
+    </div>
+
+    <!-- CARD: Totales -->
+    <div class="card card--totales">
+      <div class="card-body">
+        <div class="total-fila">
+          <span>SUBTOTAL</span>
+          <span id="totalSubtotal">0.00</span>
+        </div>
+        <div class="total-fila">
+          <span>IGV (18%)</span>
+          <span id="totalIgv">0.00</span>
+        </div>
+        <div class="total-fila total-fila--final">
+          <span>TOTAL</span>
+          <span id="totalFinal">0.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD: Datos adicionales -->
+    <div class="card">
+      <div class="card-header"><span>Datos adicionales</span></div>
+      <div class="card-body">
+        <div class="field">
+          <label for="elaboradoPor">Elaborado por</label>
+          <input type="text" id="elaboradoPor" />
+        </div>
+        <div class="field">
+          <label for="notas">Notas y comentarios</label>
+          <textarea id="notas" rows="3" placeholder="Condiciones, validez de la oferta, etc."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="actions actions--row">
+      <button type="button" class="btn-outline" id="btnVerPdf">
+        Ver PDF
+      </button>
+      <button type="button" class="btn-primary" id="btnEnviar">
+        Enviar cotización
+      </button>
+    </div>
+
+  </main>
+
+</div>
+
+<div class="toast-msg" id="toastMsg"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="../../js/preparar_cotizacion.js"></script>
+</body>
+</html>
