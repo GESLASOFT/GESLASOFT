@@ -173,23 +173,25 @@ function aplicarFiltros() {
 
   // Filtro estado de acreditación
   // Soporta tanto el campo nuevo "estado" (string) como el legacy booleano "acreditado"
-  if (filtroAcreditacion !== 'todos') {
-    resultado = resultado.filter(l => {
-      const estado = obtenerEstado(l);
-      return estado === filtroAcreditacion;
-    });
+  if (filtroAcreditacion === 'acreditado') {
+    resultado = resultado.filter(l => l.acreditado === true);
+  } else if (filtroAcreditacion === 'no_acreditado') {
+    resultado = resultado.filter(l => l.acreditado === false);
+  } else if (filtroAcreditacion === 'suspendido') {
+    resultado = resultado.filter(l => l.estado === 'suspendido');
+  } else if (filtroAcreditacion === 'en_proceso') {
+    resultado = resultado.filter(l => l.estado === 'en_proceso');
   }
+  // 'todos' → no filtra, muestra todos
 
   renderCards(resultado);
 }
 
-// ── OBTENER ESTADO NORMALIZADO ──
-// Compatibilidad: si existe l.estado lo usa; si no, cae al booleano l.acreditado
-function obtenerEstado(lab) {
-  if (lab.estado) return lab.estado; // 'acreditado' | 'no_acreditado' | 'suspendido' | 'en_proceso'
-  if (lab.acreditado === true)  return 'acreditado';
-  if (lab.acreditado === false) return 'no_acreditado';
-  return 'no_acreditado';
+
+// ── OBTENER ESTADO (SOLO PARA EL BADGE DE LA CARD) ──
+// Exclusivamente basado en la columna "estado". Sin fallback al booleano.
+function obtenerEstadoBadge(lab) {
+  return lab.estado || 'sin_estado';
 }
 
 // ── CONFIG DE BADGES ──
@@ -198,6 +200,7 @@ const ESTADO_CONFIG = {
   no_acreditado: { label: '✗ NO ACREDITADO', cls: 'lab-badge-no-acreditado' },
   suspendido:    { label: '⏸ SUSPENDIDO',    cls: 'lab-badge-suspendido'    },
   en_proceso:    { label: '⏳ EN PROCESO',    cls: 'lab-badge-en-proceso'    },
+  sin_estado:    { label: 'SIN ESTADO',      cls: 'lab-badge-sin-estado'    },
 };
 
 // ── RENDER CARDS ──
@@ -236,8 +239,8 @@ function crearCard(lab, idx) {
   }).join('');
 
   // Badge según estado
-  const estado = obtenerEstado(lab);
-  const cfg    = ESTADO_CONFIG[estado] || ESTADO_CONFIG['no_acreditado'];
+  const estado   = obtenerEstadoBadge(lab);
+  const cfg      = ESTADO_CONFIG[estado] || ESTADO_CONFIG['sin_estado'];
   const badgeHtml = `<span class="${cfg.cls}">${cfg.label}</span>`;
 
   const card = document.createElement('div');

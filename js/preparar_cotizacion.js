@@ -11,6 +11,7 @@ let solicitud   = null;
 let items       = [];
 let moneda      = 'USD';
 let tipoCambio  = 3.75;
+let preciosUsdBase = []; // precio en USD por ítem — fuente de verdad, independiente de la moneda mostrada
 
 // ── DOM ──
 const estadoCargando = document.getElementById('estadoCargando');
@@ -38,6 +39,72 @@ function authHeaders(token) {
     'Content-Type':  'application/json',
   };
 }
+
+
+
+function normalizarCodigo(c) {
+  return (c || '').trim().toUpperCase().replace(/\s+/g, ' ');
+}
+
+async function cargarPreciosLaboratorio(token, laboratorioId) {
+  if (!laboratorioId) return {};
+  const url = `${SUPABASE_URL}/rest/v1/laboratorio_metodos`
+    + `?laboratorio_id=eq.${laboratorioId}`
+    + `&select=id,metodo_id,metodos(codigo,codigo_ntp,codigo_iso,codigo_aashto),laboratorio_metodo_precios(precio_usd,anio)`;
+  try {
+    const res = await fetch(url, { headers: authHeaders(token) });
+    if (!res.ok) return {};
+    const data = await res.json();
+    const mapa = {};
+    data.forEach(row => {
+      const precioRow = (row.laboratorio_metodo_precios || [])
+        .sort((a, b) => b.anio - a.anio)[0];
+      if (!precioRow) return;
+      const codigos = [
+        row.metodos?.codigo,
+        row.metodos?.codigo_ntp,
+        row.metodos?.codigo_iso,
+        row.metodos?.codigo_aashto,
+      ].filter(Boolean);
+      codigos.forEach(c => { mapa[normalizarCodigo(c)] = precioRow.precio_usd; });
+    });
+    return mapa;
+  } catch (e) {
+    console.error('No se pudieron cargar precios automáticos:', e);
+    return {};
+  }
+}
+
+function calcularValorMostrado(idx) {
+  const usd = preciosUsdBase[idx];
+  if (usd === null || usd === undefined) return null;
+  return moneda === 'PEN' ? usd * tipoCambio : usd;
+}
+
+async function cargarTasaCambioSugerida(token, laboratorioId) {
+  if (!laboratorioId) return null;
+  try {
+    // 1. Obtener la moneda local del laboratorio
+    const urlLab = `${SUPABASE_URL}/rest/v1/laboratorios?id=eq.${laboratorioId}&select=moneda_local`;
+    const resLab = await fetch(urlLab, { headers: authHeaders(token) });
+    if (!resLab.ok) return null;
+    const labData = await resLab.json();
+    const monedaLocal = labData[0]?.moneda_local;
+    if (!monedaLocal || monedaLocal === 'USD') return null;
+
+    // 2. Buscar la tasa vigente para esa moneda
+    const urlTasa = `${SUPABASE_URL}/rest/v1/tasas_cambio?moneda=eq.${monedaLocal}&select=tasa`;
+    const resTasa = await fetch(urlTasa, { headers: authHeaders(token) });
+    if (!resTasa.ok) return null;
+    const tasaData = await resTasa.json();
+    return tasaData[0]?.tasa || null;
+  } catch (e) {
+    console.error('No se pudo cargar la tasa de cambio sugerida:', e);
+    return null;
+  }
+}
+
+
 
 // ── TOAST ──
 let toastTimer;
@@ -90,12 +157,15 @@ function renderInfoSolicitud() {
   headerSub.textContent = solicitud.nro_solicitud || 'Solicitud';
 }
 
+
+
 // ── RENDER ENSAYOS ──
 function renderEnsayos() {
   ensayosContainer.innerHTML = '';
   items.forEach((item, idx) => {
     const row = document.createElement('div');
     row.className = 'ensayo-row';
+    const valorMostrado = calcularValorMostrado(idx);
     row.innerHTML = `
       <div class="field">
         <label>Descripción</label>
@@ -108,17 +178,24 @@ function renderEnsayos() {
       <div class="ensayo-row-precio">
         <label>Precio unitario</label>
         <input type="number" class="ensayo-precio-input precio-input" data-idx="${idx}"
-               step="0.01" min="0" placeholder="0.00" />
+               step="0.01" min="0" placeholder="0.00"
+               value="${valorMostrado !== null ? valorMostrado.toFixed(2) : ''}" />
       </div>
     `;
     ensayosContainer.appendChild(row);
   });
 
-  // Eventos
+  // Eventos: al editar a mano, se recalcula y se guarda de vuelta en USD
   ensayosContainer.querySelectorAll('.precio-input').forEach(input => {
-    input.addEventListener('input', calcularTotales);
+    input.addEventListener('input', (e) => {
+      const idx = Number(e.target.dataset.idx);
+      const val = parseFloat(e.target.value);
+      preciosUsdBase[idx] = isNaN(val) ? null : (moneda === 'PEN' ? val / tipoCambio : val);
+      calcularTotales();
+    });
   });
 }
+
 
 // ── CALCULAR TOTALES ──
 function calcularTotales() {
@@ -143,13 +220,21 @@ function seleccionarMoneda(nuevaMoneda) {
   btnUSD.classList.toggle('active', moneda === 'USD');
   btnPEN.classList.toggle('active', moneda === 'PEN');
   campoTipoCambio.classList.toggle('hidden', moneda !== 'PEN');
+  renderEnsayos(); // repinta los precios convertidos a la nueva moneda
   calcularTotales();
 }
+
 btnUSD.addEventListener('click', () => seleccionarMoneda('USD'));
 btnPEN.addEventListener('click', () => seleccionarMoneda('PEN'));
 tipoCambioInput.addEventListener('input', () => {
   const tc = parseFloat(tipoCambioInput.value);
-  if (tc > 0) tipoCambio = tc;
+  if (tc > 0) {
+    tipoCambio = tc;
+    if (moneda === 'PEN') {
+      renderEnsayos();
+      calcularTotales();
+    }
+  }
 });
 
 
@@ -546,6 +631,7 @@ async function init() {
     solicitud = data.solicitud;
     items     = data.items;
 
+
     if (items.length === 0) {
       estadoCargando.classList.add('hidden');
       estadoError.classList.remove('hidden');
@@ -553,7 +639,24 @@ async function init() {
       return;
     }
 
+    // ── NUEVO: cargar precios automáticos del laboratorio ──
+    const mapaPrecios = await cargarPreciosLaboratorio(token, solicitud.laboratorio_id);
+    preciosUsdBase = items.map(item => {
+      const precio = mapaPrecios[normalizarCodigo(item.norma)];
+      return typeof precio === 'number' ? precio : null;
+    });
+
+    // ── NUEVO: cargar tasa de cambio sugerida ──
+    const tasaSugerida = await cargarTasaCambioSugerida(token, solicitud.laboratorio_id);
+    if (tasaSugerida) {
+      tipoCambio = tasaSugerida;
+      tipoCambioInput.value = tasaSugerida;
+    }
+
     renderInfoSolicitud();
+
+
+
     renderEnsayos();
     calcularTotales();
 
