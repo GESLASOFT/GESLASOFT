@@ -12,6 +12,7 @@ let items       = [];
 let moneda      = 'USD';
 let tipoCambio  = 3.75;
 let preciosUsdBase = []; // precio en USD por ítem — fuente de verdad, independiente de la moneda mostrada
+let preciosAcreditados = []; // true/false por ítem — si el método está acreditado para ese laboratorio
 
 // ── DOM ──
 const estadoCargando = document.getElementById('estadoCargando');
@@ -46,16 +47,18 @@ function normalizarCodigo(c) {
   return (c || '').trim().toUpperCase().replace(/\s+/g, ' ');
 }
 
+
 async function cargarPreciosLaboratorio(token, laboratorioId) {
-  if (!laboratorioId) return {};
+  if (!laboratorioId) return { precios: {}, acreditados: {} };
   const url = `${SUPABASE_URL}/rest/v1/laboratorio_metodos`
     + `?laboratorio_id=eq.${laboratorioId}`
-    + `&select=id,metodo_id,metodos(codigo,codigo_ntp,codigo_iso,codigo_aashto),laboratorio_metodo_precios(precio_usd,anio)`;
+    + `&select=id,metodo_id,acreditado,metodos(codigo,codigo_ntp,codigo_iso,codigo_aashto),laboratorio_metodo_precios(precio_usd,anio)`;
   try {
     const res = await fetch(url, { headers: authHeaders(token) });
-    if (!res.ok) return {};
+    if (!res.ok) return { precios: {}, acreditados: {} };
     const data = await res.json();
-    const mapa = {};
+    const precios = {};
+    const acreditados = {};
     data.forEach(row => {
       const precioRow = (row.laboratorio_metodo_precios || [])
         .sort((a, b) => b.anio - a.anio)[0];
@@ -66,12 +69,16 @@ async function cargarPreciosLaboratorio(token, laboratorioId) {
         row.metodos?.codigo_iso,
         row.metodos?.codigo_aashto,
       ].filter(Boolean);
-      codigos.forEach(c => { mapa[normalizarCodigo(c)] = precioRow.precio_usd; });
+      codigos.forEach(c => {
+        const key = normalizarCodigo(c);
+        precios[key] = precioRow.precio_usd;
+        acreditados[key] = row.acreditado === true;
+      });
     });
-    return mapa;
+    return { precios, acreditados };
   } catch (e) {
     console.error('No se pudieron cargar precios automáticos:', e);
-    return {};
+    return { precios: {}, acreditados: {} };
   }
 }
 
@@ -104,7 +111,18 @@ async function cargarTasaCambioSugerida(token, laboratorioId) {
   }
 }
 
-
+async function contarVersionesPrevias(token, solicitudId) {
+  const url = `${SUPABASE_URL}/rest/v1/cotizaciones?solicitud_id=eq.${solicitudId}&select=id`;
+  try {
+    const res = await fetch(url, { headers: authHeaders(token) });
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data.length;
+  } catch (e) {
+    console.error('No se pudo contar versiones previas:', e);
+    return 0;
+  }
+}
 
 // ── TOAST ──
 let toastTimer;
@@ -277,7 +295,7 @@ function cargarImagenComoBase64(url) {
   });
 }
 
-async function generarPdf(nroCotizacionMostrar) {
+async function generarPdf(nroCotizacionMostrar, versionMostrar) {
   const usuarioSesion = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
   const lab = usuarioSesion?.laboratorios || null;
 
@@ -319,7 +337,25 @@ async function generarPdf(nroCotizacionMostrar) {
 
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'PNG', pageWidth - marginX - 28, 16, 26, 18, undefined, 'FAST');
+      const maxW = 28;
+      const maxH = 18;
+      const props = doc.getImageProperties(logoBase64);
+      const ratio = props.width / props.height;
+
+      let w = maxW;
+      let h = w / ratio;
+      if (h > maxH) {
+        h = maxH;
+        w = h * ratio;
+      }
+
+      // Centrar dentro del espacio reservado (28 x 18), tanto horizontal como vertical
+      const boxX = pageWidth - marginX - 28;
+      const boxY = 16;
+      const offsetX = boxX + (maxW - w) / 2;
+      const offsetY = boxY + (maxH - h) / 2;
+
+      doc.addImage(logoBase64, 'PNG', offsetX, offsetY, w, h, undefined, 'FAST');
     } catch (e) { /* si falla, no rompe el PDF */ }
   } else {
     doc.setFont('helvetica', 'bold');
@@ -374,9 +410,10 @@ async function generarPdf(nroCotizacionMostrar) {
   const filasTabla = items.map((item, idx) => {
     const precio = precios[idx] || 0;
     const sub = precio * (item.cantidad || 1);
+    const desc = descripciones[idx] + (preciosAcreditados[idx] ? ' *' : '');
     return [
       String(idx + 1),
-      descripciones[idx],
+      desc,
       item.norma || '',
       String(item.cantidad),
       precio > 0 ? precio.toFixed(2) : '',
@@ -420,6 +457,17 @@ async function generarPdf(nroCotizacionMostrar) {
     doc.text(valor, boxX + boxW - 3, yTot + 5, { align: 'right' });
     yTot += 7;
   }
+
+  
+
+  const hayAcreditados = preciosAcreditados.some(Boolean);
+  if (hayAcreditados) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7);
+    doc.setTextColor(...gris700);
+    doc.text('* Ensayo acreditado ante INACAL bajo el alcance de acreditación del laboratorio.', marginX, yTot + 5);
+  }
+
   filaTotal(`SUBTOTAL (${simbolo})`, subtotal.toFixed(2), grisClr, false);
   filaTotal('I.G.V. (18%)', igv.toFixed(2), grisClr, false);
   filaTotal(`Total a Facturar (${simbolo})`, total.toFixed(2), azulOsc, true);
@@ -430,15 +478,18 @@ async function generarPdf(nroCotizacionMostrar) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(...gris700);
-  const pieX = pageWidth - marginX - 60;
+  const pieX = pageWidth - marginX - 30;
   doc.text('Elaborado por:', pieX, yTot, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.text(elaboradoInput.value.trim() || '—', pieX + 3, yTot);
   yTot += 5;
+
   doc.setFont('helvetica', 'bold');
   doc.text('Versión:', pieX, yTot, { align: 'right' });
   doc.setFont('helvetica', 'normal');
-  doc.text('01', pieX + 3, yTot);
+  doc.text(String(versionMostrar || 1).padStart(2, '0'), pieX + 3, yTot);
+
+
   yTot += 5;
   doc.setFont('helvetica', 'bold');
   doc.text('Fecha:', pieX, yTot, { align: 'right' });
@@ -466,6 +517,9 @@ async function generarPdf(nroCotizacionMostrar) {
   return doc;
 }
 
+
+
+
 async function verPdf() {
   if (items.length === 0) {
     mostrarToast('No hay ensayos para mostrar.', 'warning');
@@ -475,10 +529,14 @@ async function verPdf() {
   btnVerPdf.disabled = true;
   btnVerPdf.textContent = 'Generando...';
   try {
+    const token = sessionStorage.getItem('geslasoft_token');
+    const versionesPrevias = await contarVersionesPrevias(token, solicitud.id);
+    const versionPreview = versionesPrevias + 1;
+
     const nroPreview = solicitud.nro_solicitud
       ? `(Vista previa — ${solicitud.nro_solicitud})`
       : '(Vista previa)';
-    const doc = await generarPdf(nroPreview);
+    const doc = await generarPdf(nroPreview, versionPreview);
     doc.output('dataurlnewwindow');
   } catch (err) {
     console.error(err);
@@ -488,6 +546,9 @@ async function verPdf() {
     btnVerPdf.textContent = 'Ver PDF';
   }
 }
+
+
+
 document.getElementById('btnVerPdf').addEventListener('click', verPdf);
 
 
@@ -536,6 +597,10 @@ async function enviarCotizacion() {
     const igv   = subtotal * 0.18;
     const total = subtotal + igv;
 
+    // ── Calcular versión dinámicamente ──
+    const versionesPrevias = await contarVersionesPrevias(token, solicitud.id);
+    const nuevaVersion = versionesPrevias + 1;
+
     // ── 1. Crear cotización ──
     // Nota: subtotal/igv/total NO se guardan en cotizaciones (no existen esas columnas).
     // Se calculan al vuelo a partir de cotizacion_items.precio_total cuando se necesiten mostrar.
@@ -557,7 +622,7 @@ async function enviarCotizacion() {
         validez_dias:       15,
         notas:              notasInput.value.trim() || null,
         estado:             'enviada',
-        version:             1,
+        version:             nuevaVersion,
         enviada_en:          new Date().toISOString(),
     }),
     });
@@ -582,6 +647,7 @@ async function enviarCotizacion() {
         norma:              item.norma || '',
         cantidad:           item.cantidad,
         precio_unitario:    precios[idx],
+        acreditado:         preciosAcreditados[idx] || false,
     }))),
     });
 
@@ -640,11 +706,13 @@ async function init() {
     }
 
     // ── NUEVO: cargar precios automáticos del laboratorio ──
-    const mapaPrecios = await cargarPreciosLaboratorio(token, solicitud.laboratorio_id);
+    const { precios: mapaPrecios, acreditados: mapaAcreditados } =
+      await cargarPreciosLaboratorio(token, solicitud.laboratorio_id);
     preciosUsdBase = items.map(item => {
       const precio = mapaPrecios[normalizarCodigo(item.norma)];
       return typeof precio === 'number' ? precio : null;
     });
+    preciosAcreditados = items.map(item => mapaAcreditados[normalizarCodigo(item.norma)] === true);
 
     // ── NUEVO: cargar tasa de cambio sugerida ──
     const tasaSugerida = await cargarTasaCambioSugerida(token, solicitud.laboratorio_id);
