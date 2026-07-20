@@ -255,9 +255,7 @@ tipoCambioInput.addEventListener('input', () => {
   }
 });
 
-
-
-// ── GENERAR PDF (jsPDF) ──
+// ── DATOS DEL FORMULARIO EN EDICIÓN (borrador) ──
 function obtenerDatosFormulario() {
   const precios = [];
   const descripciones = [];
@@ -267,10 +265,7 @@ function obtenerDatosFormulario() {
   ensayosContainer.querySelectorAll('.ensayo-desc').forEach((input, idx) => {
     descripciones[idx] = input.value.trim() || items[idx].ensayo_nombre;
   });
-  const subtotal = precios.reduce((sum, p, idx) => sum + p * (items[idx].cantidad || 1), 0);
-  const igv = subtotal * 0.18;
-  const total = subtotal + igv;
-  return { precios, descripciones, subtotal, igv, total };
+  return { precios, descripciones };
 }
 
 function cargarImagenComoBase64(url) {
@@ -287,7 +282,7 @@ function cargarImagenComoBase64(url) {
         ctx.drawImage(img, 0, 0);
         resolve(canvas.toDataURL('image/png'));
       } catch (e) {
-        resolve(null); // CORS u otro error → fallback a texto
+        resolve(null);
       }
     };
     img.onerror = () => resolve(null);
@@ -295,7 +290,20 @@ function cargarImagenComoBase64(url) {
   });
 }
 
-async function generarPdf(nroCotizacionMostrar, versionMostrar) {
+// ── NÚCLEO DE GENERACIÓN DE PDF ──
+// Recibe los datos ya resueltos (sea del borrador en edición o de una cotización guardada)
+// y arma el documento. No sabe de dónde vinieron los datos.
+async function renderPdfDesdeDatos({
+  nroCotizacionMostrar,
+  versionMostrar,
+  monedaUsada,
+  itemsArr,        // array con { ensayo_nombre/descripcion, norma, cantidad }
+  precios,         // array de números, alineado con itemsArr
+  descripciones,   // array de strings, alineado con itemsArr
+  acreditadosArr,  // array de booleans, alineado con itemsArr
+  notasTexto,
+  elaboradoPorTexto,
+}) {
   const usuarioSesion = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
   const lab = usuarioSesion?.laboratorios || null;
 
@@ -312,14 +320,16 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
   const pageWidth = doc.internal.pageSize.getWidth();
   const contentWidth = pageWidth - marginX * 2;
 
-  const { precios, descripciones, subtotal, igv, total } = obtenerDatosFormulario();
-  const simbolo = moneda === 'USD' ? 'USD' : 'S/.';
+  const subtotal = precios.reduce((sum, p, idx) => sum + p * (itemsArr[idx].cantidad || 1), 0);
+  const igv = subtotal * 0.18;
+  const total = subtotal + igv;
+  const simbolo = monedaUsada === 'USD' ? 'USD' : 'S/.';
 
   let logoBase64 = null;
   if (lab?.logo_url && !lab.logo_url.startsWith('data:image')) {
     logoBase64 = await cargarImagenComoBase64(lab.logo_url);
   } else if (lab?.logo_url) {
-    logoBase64 = lab.logo_url; // ya es base64
+    logoBase64 = lab.logo_url;
   }
 
   // ── ENCABEZADO ──
@@ -341,22 +351,15 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
       const maxH = 18;
       const props = doc.getImageProperties(logoBase64);
       const ratio = props.width / props.height;
-
       let w = maxW;
       let h = w / ratio;
-      if (h > maxH) {
-        h = maxH;
-        w = h * ratio;
-      }
-
-      // Centrar dentro del espacio reservado (28 x 18), tanto horizontal como vertical
+      if (h > maxH) { h = maxH; w = h * ratio; }
       const boxX = pageWidth - marginX - 28;
       const boxY = 16;
       const offsetX = boxX + (maxW - w) / 2;
       const offsetY = boxY + (maxH - h) / 2;
-
       doc.addImage(logoBase64, 'PNG', offsetX, offsetY, w, h, undefined, 'FAST');
-    } catch (e) { /* si falla, no rompe el PDF */ }
+    } catch (e) { /* no rompe el PDF */ }
   } else {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -407,10 +410,10 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
 
   // ── TABLA DE ÍTEMS ──
   y += 32;
-  const filasTabla = items.map((item, idx) => {
+  const filasTabla = itemsArr.map((item, idx) => {
     const precio = precios[idx] || 0;
     const sub = precio * (item.cantidad || 1);
-    const desc = descripciones[idx] + (preciosAcreditados[idx] ? ' *' : '');
+    const desc = descripciones[idx] + (acreditadosArr[idx] ? ' *' : '');
     return [
       String(idx + 1),
       desc,
@@ -458,9 +461,7 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
     yTot += 7;
   }
 
-  
-
-  const hayAcreditados = preciosAcreditados.some(Boolean);
+  const hayAcreditados = acreditadosArr.some(Boolean);
   if (hayAcreditados) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7);
@@ -481,14 +482,13 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
   const pieX = pageWidth - marginX - 30;
   doc.text('Elaborado por:', pieX, yTot, { align: 'right' });
   doc.setFont('helvetica', 'normal');
-  doc.text(elaboradoInput.value.trim() || '—', pieX + 3, yTot);
+  doc.text(elaboradoPorTexto || '—', pieX + 3, yTot);
   yTot += 5;
 
   doc.setFont('helvetica', 'bold');
   doc.text('Versión:', pieX, yTot, { align: 'right' });
   doc.setFont('helvetica', 'normal');
   doc.text(String(versionMostrar || 1).padStart(2, '0'), pieX + 3, yTot);
-
 
   yTot += 5;
   doc.setFont('helvetica', 'bold');
@@ -497,7 +497,7 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
   doc.text(fecha, pieX + 3, yTot);
 
   // ── NOTAS ──
-  if (notasInput.value.trim()) {
+  if (notasTexto && notasTexto.trim()) {
     yTot += 10;
     doc.setDrawColor(...gris400);
     doc.line(marginX, yTot, marginX + contentWidth, yTot);
@@ -510,49 +510,142 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...gris700);
-    const notasLines = doc.splitTextToSize(notasInput.value.trim(), contentWidth);
+    const notasLines = doc.splitTextToSize(notasTexto.trim(), contentWidth);
     doc.text(notasLines, marginX, yTot);
   }
 
   return doc;
 }
 
+// ── GENERAR PDF: BORRADOR EN EDICIÓN ──
+async function generarPdf(nroCotizacionMostrar, versionMostrar) {
+  const { precios, descripciones } = obtenerDatosFormulario();
+  return renderPdfDesdeDatos({
+    nroCotizacionMostrar,
+    versionMostrar,
+    monedaUsada: moneda,
+    itemsArr: items,
+    precios,
+    descripciones,
+    acreditadosArr: preciosAcreditados,
+    notasTexto: notasInput.value,
+    elaboradoPorTexto: elaboradoInput.value.trim(),
+  });
+}
 
+// ── GENERAR PDF: ÚLTIMA COTIZACIÓN YA ENVIADA (datos guardados) ──
+async function generarPdfCotizacionGuardada(cotizacion, cotizacionItems) {
+  const precios = cotizacionItems.map(it => Number(it.precio_unitario) || 0);
+  const descripciones = cotizacionItems.map(it => it.ensayo_nombre);
+  const acreditadosArr = cotizacionItems.map(it => it.acreditado === true);
 
+  return renderPdfDesdeDatos({
+    nroCotizacionMostrar: cotizacion.nro_cotizacion || solicitud.nro_solicitud || '—',
+    versionMostrar: cotizacion.version,
+    monedaUsada: cotizacion.moneda || 'USD',
+    itemsArr: cotizacionItems,
+    precios,
+    descripciones,
+    acreditadosArr,
+    notasTexto: cotizacion.notas || '',
+    elaboradoPorTexto: elaboradoInput.value.trim(),
+  });
+}
 
+// ── CARGAR LA ÚLTIMA COTIZACIÓN ENVIADA DE ESTA SOLICITUD ──
+async function cargarUltimaCotizacion(token, solicitudId) {
+  const urlCot = `${SUPABASE_URL}/rest/v1/cotizaciones`
+    + `?solicitud_id=eq.${solicitudId}&select=*&order=version.desc&limit=1`;
+  const resCot = await fetch(urlCot, { headers: authHeaders(token) });
+  if (!resCot.ok) throw new Error(`Error al cargar la última cotización (${resCot.status})`);
+  const cotData = await resCot.json();
+  if (!cotData.length) return null;
+  const cotizacion = cotData[0];
+
+  const urlItems = `${SUPABASE_URL}/rest/v1/cotizacion_items`
+    + `?cotizacion_id=eq.${cotizacion.id}&order=area_disciplina.asc,ensayo_nombre.asc`;
+  const resItems = await fetch(urlItems, { headers: authHeaders(token) });
+  if (!resItems.ok) throw new Error(`Error al cargar los ítems de la cotización (${resItems.status})`);
+  const cotizacionItems = await resItems.json();
+
+  return { cotizacion, items: cotizacionItems };
+}
+
+// ── ABRIR PDF EN VENTANA NUEVA (compatible con Safari iOS / Huawei) ──
+// Abre la ventana YA, sincrónicamente con el click, y la redirige al Blob
+// una vez el PDF esté listo. Si el navegador bloquea el popup, cae a descarga directa.
+function abrirPdfEnNuevaVentana(promesaDoc) {
+  const ventana = window.open('', '_blank');
+  if (ventana) {
+    ventana.document.write(
+      '<!DOCTYPE html><html><head><title>Generando PDF...</title></head>' +
+      '<body style="margin:0;height:100vh;display:flex;align-items:center;justify-content:center;' +
+      'font-family:sans-serif;color:#666;">Generando PDF, un momento…</body></html>'
+    );
+  }
+
+  promesaDoc
+    .then((doc) => {
+      const blob = doc.output('blob');
+      const url = URL.createObjectURL(blob);
+      if (ventana && !ventana.closed) {
+        ventana.location.href = url;
+      } else {
+        // Popup bloqueado: forzamos descarga como respaldo
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cotizacion.pdf';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      if (ventana && !ventana.closed) {
+        ventana.document.body.innerHTML =
+          '<p style="font-family:sans-serif;color:#c0392b;padding:20px;">Error al generar el PDF.</p>';
+      }
+      mostrarToast(err.message || 'Error al generar el PDF.', 'danger');
+    });
+}
+
+// ── BOTÓN: VER PDF (borrador en edición) ──
 async function verPdf() {
   if (items.length === 0) {
     mostrarToast('No hay ensayos para mostrar.', 'warning');
     return;
   }
-  const btnVerPdf = document.getElementById('btnVerPdf');
-  btnVerPdf.disabled = true;
-  btnVerPdf.textContent = 'Generando...';
-  try {
-    const token = sessionStorage.getItem('geslasoft_token');
+  const token = sessionStorage.getItem('geslasoft_token');
+
+  const promesaDoc = (async () => {
     const versionesPrevias = await contarVersionesPrevias(token, solicitud.id);
     const versionPreview = versionesPrevias + 1;
-
     const nroPreview = solicitud.nro_solicitud
       ? `(Vista previa — ${solicitud.nro_solicitud})`
       : '(Vista previa)';
-    const doc = await generarPdf(nroPreview, versionPreview);
-    doc.output('dataurlnewwindow');
-  } catch (err) {
-    console.error(err);
-    mostrarToast('Error al generar el PDF.', 'danger');
-  } finally {
-    btnVerPdf.disabled = false;
-    btnVerPdf.textContent = 'Ver PDF';
-  }
+    return generarPdf(nroPreview, versionPreview);
+  })();
+
+  abrirPdfEnNuevaVentana(promesaDoc);
 }
-
-
-
 document.getElementById('btnVerPdf').addEventListener('click', verPdf);
 
+// ── BOTÓN: VER ÚLTIMA COTIZACIÓN ENVIADA ──
+async function verUltimaCotizacion() {
+  const token = sessionStorage.getItem('geslasoft_token');
 
+  const promesaDoc = (async () => {
+    const resultado = await cargarUltimaCotizacion(token, solicitud.id);
+    if (!resultado) {
+      throw new Error('No se encontró una cotización enviada para esta solicitud.');
+    }
+    return generarPdfCotizacionGuardada(resultado.cotizacion, resultado.items);
+  })();
 
+  abrirPdfEnNuevaVentana(promesaDoc);
+}
+document.getElementById('btnVerUltimaCotizacion').addEventListener('click', verUltimaCotizacion);
 
 
 
@@ -722,6 +815,9 @@ async function init() {
     }
 
     renderInfoSolicitud();
+    const versionesExistentes = await contarVersionesPrevias(token, solicitud.id);
+    const btnVerUltima = document.getElementById('btnVerUltimaCotizacion');
+    btnVerUltima.classList.toggle('hidden', versionesExistentes === 0);
 
 
 
