@@ -525,8 +525,8 @@
 
 .detalle-grid {
   display: grid;
-  grid-template-columns: 130px 1fr;
-  gap: 6px 12px;
+  grid-template-columns: 64px 1fr;
+  gap: 6px 6px;
 }
 
 .detalle-label {
@@ -699,28 +699,75 @@
   transform: translateX(-50%) translateY(0);
 }
 
+
 /* ── RESPONSIVE ── */
 @media (max-width: 600px) {
   .panel-header { padding: 0 14px; }
   .panel-usuario-badge { display: none; }
-  .sol-card-meta { display: none; }
+
   .filtros-bar { gap: 8px; }
   .filtro-search { min-width: 100%; }
   .fab-nueva span { display: none; }
   .fab-nueva { padding: 16px; border-radius: 50%; }
   .req-content { padding: 16px 12px 80px; }
+
+  /* --- sol-card-main pasa de row a column --- */
+  .sol-card-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* El acento vertical no tiene sentido en columna: lo convertimos
+     en una franja superior delgada */
+  .sol-card-accent {
+    width: auto;
+    height: 3px;
+    min-height: 0;
+    align-self: auto;
+    border-radius: 4px 4px 0 0;
+  }
+
+  /* --- sol-card-meta ya no se oculta: se apila debajo del body --- */
+  .sol-card-meta {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* La fecha ya no está pegada a la derecha, se alinea a la izquierda */
+  .sol-fecha {
+    align-items: flex-start;
+  }
+
+  /* Botón/badge de cotizar-atendido, si vienen dentro de sol-card-meta,
+     quedan a la derecha aunque el resto se alinee a la izquierda */
+  .sol-card-meta .btn-cotizar,
+  .sol-card-meta .sol-badge-atendido {
+    margin-left: auto;
+  }
 }
+
 
 /* ── BOTÓN COTIZAR / BADGE ATENDIDO ── */
 .btn-cotizar {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  font-size: 11px;
+  padding: 5px 11px;
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.3px;
   font-family: var(--font);
   color: #fff;
   background: var(--accent);
+  border: 1px solid var(--accent);
   border-radius: 20px;
   text-decoration: none;
   white-space: nowrap;
@@ -728,6 +775,7 @@
 }
 .btn-cotizar:hover {
   background: var(--accent-mid);
+  border-color: var(--accent-mid);
 }
 
 .sol-badge-atendido {
@@ -742,4 +790,24 @@
   border: 1px solid rgba(0,137,123,.25);
   border-radius: 20px;
   white-space: nowrap;
+}
+
+.btn-recotizar {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  font-family: var(--font);
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background .15s, color .15s;
+}
+.btn-recotizar:hover {
+  background: var(--accent-light);
 }
