@@ -407,6 +407,7 @@ async function enviarSolicitud() {
         nombre_proyecto:      document.getElementById('nombreProyecto').value.trim()    || null,
         ubicacion:            document.getElementById('ubicacionProyecto').value.trim() || null,
         laboratorio_codigo:   labActual?.codigo || null,
+        laboratorio_id:       labActual?.id || null,
         origen: (() => {
           const token   = sessionStorage.getItem('geslasoft_token');
           const usuario = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || '{}');

@@ -110,13 +110,15 @@ function crearCard(sol) {
     rechazado: 'Rechazado',
   }[estado] || estado;
 
+
   const { dia: aprobDia } = formatearFecha(sol.aprobado_en);
   const tieneCotizacion = sol.cotizaciones && sol.cotizaciones.length > 0;
   const botonCotizarHtml = tieneCotizacion
-    ? `<span class="sol-badge-atendido">Atendido</span>`
+    ? `<span class="sol-badge-atendido">Atendido</span>
+       <a href="../panel_lab/preparar_cotizacion.html?solicitud_id=${sol.id}" class=" btn-recotizar">Cotizar de nuevo</a>`
     : `<a href="../panel_lab/preparar_cotizacion.html?solicitud_id=${sol.id}" class="btn-cotizar">Cotizar</a>`;
 
-
+ 
   const card = document.createElement('div');
   card.className = 'sol-card';
   card.innerHTML = `
