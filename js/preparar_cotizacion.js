@@ -475,7 +475,8 @@ async function renderPdfDesdeDatos({
 
   // ── PIE ──
   yTot += 10;
-  const fecha = new Date().toISOString().slice(0, 10);
+  const ahora = new Date();
+  const fecha = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, '0')}-${String(ahora.getDate()).padStart(2, '0')}`;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(...gris700);
