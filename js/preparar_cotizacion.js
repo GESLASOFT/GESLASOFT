@@ -13,6 +13,9 @@ let moneda      = 'USD';
 let tipoCambio  = 3.75;
 let preciosUsdBase = []; // precio en USD por ítem — fuente de verdad, independiente de la moneda mostrada
 let preciosAcreditados = []; // true/false por ítem — si el método está acreditado para ese laboratorio
+let descuentoActivo = false;
+let descuentoPorcentaje = 0;
+let descuentoDias = 0;
 
 // ── DOM ──
 const estadoCargando = document.getElementById('estadoCargando');
@@ -31,6 +34,17 @@ const totalFinal     = document.getElementById('totalFinal');
 const elaboradoInput = document.getElementById('elaboradoPor');
 const notasInput     = document.getElementById('notas');
 const btnEnviar      = document.getElementById('btnEnviar');
+const btnDescuentoSi = document.getElementById('btnDescuentoSi');
+const btnDescuentoNo = document.getElementById('btnDescuentoNo');
+const campoDescuentoPorcentaje = document.getElementById('campoDescuentoPorcentaje');
+const campoDescuentoDias       = document.getElementById('campoDescuentoDias');
+const descuentoPorcentajeInput = document.getElementById('descuentoPorcentaje');
+const descuentoDiasInput       = document.getElementById('descuentoDias');
+const filaDescuento            = document.getElementById('filaDescuento');
+const totalDescuento           = document.getElementById('totalDescuento');
+const labelDescuento           = document.getElementById('labelDescuento');
+const filaTotalConDescuento    = document.getElementById('filaTotalConDescuento');
+const totalConDescuento        = document.getElementById('totalConDescuento');
 
 // ── HEADERS COMUNES ──
 function authHeaders(token) {
@@ -215,6 +229,9 @@ function renderEnsayos() {
 }
 
 
+
+
+
 // ── CALCULAR TOTALES ──
 function calcularTotales() {
   let subtotal = 0;
@@ -223,13 +240,24 @@ function calcularTotales() {
     const cantidad = items[idx].cantidad || 1;
     subtotal += precio * cantidad;
   });
-  const igv   = subtotal * 0.18;
-  const total = subtotal + igv;
+
   const simbolo = moneda === 'USD' ? 'USD' : 'S/.';
+  const descuentoMonto = descuentoActivo ? subtotal * (descuentoPorcentaje / 100) : 0;
+  const baseImponible  = subtotal - descuentoMonto;
+  const igv   = baseImponible * 0.18;
+  const total = baseImponible + igv;
 
   totalSubtotal.textContent = `${simbolo} ${subtotal.toFixed(2)}`;
   totalIgv.textContent      = `${simbolo} ${igv.toFixed(2)}`;
   totalFinal.textContent    = `${simbolo} ${total.toFixed(2)}`;
+
+  filaDescuento.classList.toggle('hidden', !descuentoActivo);
+  filaTotalConDescuento.classList.toggle('hidden', !descuentoActivo);
+  if (descuentoActivo) {
+    labelDescuento.textContent = `Descuento Comercial: (${descuentoPorcentaje}%)`;
+    totalDescuento.textContent = `${simbolo} ${descuentoMonto.toFixed(2)}`;
+    totalConDescuento.textContent = `${simbolo} ${baseImponible.toFixed(2)}`;
+  }
 }
 
 // ── TOGGLE MONEDA ──
@@ -238,7 +266,7 @@ function seleccionarMoneda(nuevaMoneda) {
   btnUSD.classList.toggle('active', moneda === 'USD');
   btnPEN.classList.toggle('active', moneda === 'PEN');
   campoTipoCambio.classList.toggle('hidden', moneda !== 'PEN');
-  renderEnsayos(); // repinta los precios convertidos a la nueva moneda
+  renderEnsayos();
   calcularTotales();
 }
 
@@ -254,6 +282,31 @@ tipoCambioInput.addEventListener('input', () => {
     }
   }
 });
+
+// ── TOGGLE DESCUENTO COMERCIAL ──
+function seleccionarDescuento(activo) {
+  descuentoActivo = activo;
+  btnDescuentoSi.classList.toggle('active', activo);
+  btnDescuentoNo.classList.toggle('active', !activo);
+  campoDescuentoPorcentaje.classList.toggle('hidden', !activo);
+  campoDescuentoDias.classList.toggle('hidden', !activo);
+  calcularTotales();
+}
+
+btnDescuentoSi.addEventListener('click', () => seleccionarDescuento(true));
+btnDescuentoNo.addEventListener('click', () => seleccionarDescuento(false));
+descuentoPorcentajeInput.addEventListener('input', () => {
+  const p = parseFloat(descuentoPorcentajeInput.value);
+  descuentoPorcentaje = isNaN(p) ? 0 : p;
+  calcularTotales();
+});
+descuentoDiasInput.addEventListener('input', () => {
+  const d = parseInt(descuentoDiasInput.value, 10);
+  descuentoDias = isNaN(d) ? 0 : d;
+});
+
+
+
 
 // ── DATOS DEL FORMULARIO EN EDICIÓN (borrador) ──
 function obtenerDatosFormulario() {
@@ -303,6 +356,9 @@ async function renderPdfDesdeDatos({
   acreditadosArr,  // array de booleans, alineado con itemsArr
   notasTexto,
   elaboradoPorTexto,
+  descuentoActivoDato = false,
+  descuentoPorcentajeDato = 0,
+  descuentoDiasDato = 0,
 }) {
   const usuarioSesion = JSON.parse(sessionStorage.getItem('geslasoft_usuario') || 'null');
   const lab = usuarioSesion?.laboratorios || null;
@@ -321,8 +377,10 @@ async function renderPdfDesdeDatos({
   const contentWidth = pageWidth - marginX * 2;
 
   const subtotal = precios.reduce((sum, p, idx) => sum + p * (itemsArr[idx].cantidad || 1), 0);
-  const igv = subtotal * 0.18;
-  const total = subtotal + igv;
+  const descuentoMonto = descuentoActivoDato ? subtotal * (descuentoPorcentajeDato / 100) : 0;
+  const baseImponible  = subtotal - descuentoMonto;
+  const igv = baseImponible * 0.18;
+  const total = baseImponible + igv;
   const simbolo = monedaUsada === 'USD' ? 'USD' : 'S/.';
 
   let logoBase64 = null;
@@ -445,33 +503,62 @@ async function renderPdfDesdeDatos({
 
   // ── TOTALES ──
   let yTot = doc.lastAutoTable.finalY + 6;
-  const boxW = 60;
+  const boxW = 80;
   const boxX = marginX + contentWidth - boxW;
+  const anchoColumnaMonto = 24; // igual al cellWidth de "Sub Total" en la tabla de ítems
+  const colSeparatorX = boxX + boxW - anchoColumnaMonto; // límite entre columna de etiqueta y columna de monto
+  const totalesBoxStartY = yTot;
+  const lineaColorTabla = 200; // mismo color de línea que usa autoTable (theme 'grid')
+  const lineaGrosorTabla = 0.1; // mismo grosor que usa autoTable
 
   function filaTotal(label, valor, bg, blanco) {
     doc.setFillColor(...bg);
     doc.rect(boxX, yTot, boxW, 7, 'F');
-    doc.setDrawColor(...gris400);
+    doc.setDrawColor(lineaColorTabla);
+    doc.setLineWidth(lineaGrosorTabla);
     doc.rect(boxX, yTot, boxW, 7);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont('helvetica', blanco ? 'bold' : 'normal');
     doc.setFontSize(9);
     doc.setTextColor(...(blanco ? [255, 255, 255] : [0, 0, 0]));
-    doc.text(label, boxX + 3, yTot + 5);
+    doc.text(label, colSeparatorX - 3, yTot + 5, { align: 'right' });
     doc.text(valor, boxX + boxW - 3, yTot + 5, { align: 'right' });
     yTot += 7;
   }
 
-  const hayAcreditados = acreditadosArr.some(Boolean);
+const hayAcreditados = acreditadosArr.some(Boolean);
+  let notaOffsetY = yTot + 5;
   if (hayAcreditados) {
     doc.setFont('helvetica', 'italic');
     doc.setFontSize(7);
     doc.setTextColor(...gris700);
-    doc.text('* Ensayo acreditado ante INACAL bajo el alcance de acreditación del laboratorio.', marginX, yTot + 5);
+    doc.text('* Ensayo acreditado ante INACAL bajo el alcance de acreditación del laboratorio.', marginX, notaOffsetY);
+    notaOffsetY += 4;
+  }
+  if (descuentoActivoDato) {
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7);
+    doc.setTextColor(...gris700);
+    doc.text(`El descuento comercial es válido por ${descuentoDiasDato} días calendario a partir de la fecha de cotización.`, marginX, notaOffsetY);
   }
 
-  filaTotal(`SUBTOTAL (${simbolo})`, subtotal.toFixed(2), grisClr, false);
-  filaTotal('I.G.V. (18%)', igv.toFixed(2), grisClr, false);
+  const blancoFila = [255, 255, 255];
+  let filaIdx = 0;
+  function bgAlternado() {
+    const bg = filaIdx % 2 === 0 ? blancoFila : grisClr;
+    filaIdx++;
+    return bg;
+  }
+
+  filaTotal(`SUBTOTAL (${simbolo})`, subtotal.toFixed(2), bgAlternado(), false);
+  if (descuentoActivoDato) {
+    filaTotal(`Descuento Comercial: (${descuentoPorcentajeDato}%)`, descuentoMonto.toFixed(2), bgAlternado(), false);
+    filaTotal(`TOTAL (${simbolo})`, baseImponible.toFixed(2), bgAlternado(), false);
+  }
+  filaTotal('I.G.V. (18%)', igv.toFixed(2), bgAlternado(), false);
   filaTotal(`Total a Facturar (${simbolo})`, total.toFixed(2), azulOsc, true);
+  doc.setDrawColor(lineaColorTabla);
+  doc.setLineWidth(lineaGrosorTabla);
+  doc.line(colSeparatorX, totalesBoxStartY, colSeparatorX, yTot);
 
   // ── PIE ──
   yTot += 10;
@@ -531,6 +618,9 @@ async function generarPdf(nroCotizacionMostrar, versionMostrar) {
     acreditadosArr: preciosAcreditados,
     notasTexto: notasInput.value,
     elaboradoPorTexto: elaboradoInput.value.trim(),
+    descuentoActivoDato: descuentoActivo,
+    descuentoPorcentajeDato: descuentoPorcentaje,
+    descuentoDiasDato: descuentoDias,
   });
 }
 
@@ -550,6 +640,9 @@ async function generarPdfCotizacionGuardada(cotizacion, cotizacionItems) {
     acreditadosArr,
     notasTexto: cotizacion.notas || '',
     elaboradoPorTexto: elaboradoInput.value.trim(),
+    descuentoActivoDato: cotizacion.descuento_comercial_activo === true,
+    descuentoPorcentajeDato: Number(cotizacion.descuento_comercial_porcentaje) || 0,
+    descuentoDiasDato: Number(cotizacion.descuento_comercial_dias) || 0,
   });
 }
 
@@ -718,6 +811,9 @@ async function enviarCotizacion() {
         estado:             'enviada',
         version:             nuevaVersion,
         enviada_en:          new Date().toISOString(),
+        descuento_comercial_activo:     descuentoActivo,
+        descuento_comercial_porcentaje: descuentoActivo ? descuentoPorcentaje : null,
+        descuento_comercial_dias:       descuentoActivo ? descuentoDias : null,
     }),
     });
 
