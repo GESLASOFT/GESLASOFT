@@ -70,11 +70,33 @@
       </div>
     </div>
 
+
+
+
     <!-- CARD: Ensayos y precios -->
     <div class="card">
       <div class="card-header"><span>Ensayos y precios</span></div>
       <div class="card-body" id="ensayosContainer">
         <!-- Generado por JS -->
+      </div>
+    </div>
+
+    <!-- CARD: Descuento comercial -->
+    <div class="card">
+      <div class="card-header"><span>Descuento comercial</span></div>
+      <div class="card-body">
+        <div class="moneda-toggle">
+          <button type="button" class="moneda-btn active" data-descuento="no" id="btnDescuentoNo">No</button>
+          <button type="button" class="moneda-btn" data-descuento="si" id="btnDescuentoSi">Sí</button>
+        </div>
+        <div class="field hidden" id="campoDescuentoPorcentaje">
+          <label for="descuentoPorcentaje">Descuento (%)</label>
+          <input type="number" id="descuentoPorcentaje" step="0.01" min="0" max="100" value="0" />
+        </div>
+        <div class="field hidden" id="campoDescuentoDias">
+          <label for="descuentoDias">Días de validez de la oferta</label>
+          <input type="number" id="descuentoDias" step="1" min="0" value="0" />
+        </div>
       </div>
     </div>
 
@@ -84,6 +106,14 @@
         <div class="total-fila">
           <span>SUBTOTAL</span>
           <span id="totalSubtotal">0.00</span>
+        </div>
+        <div class="total-fila hidden" id="filaDescuento">
+          <span id="labelDescuento">Descuento Comercial</span>
+          <span id="totalDescuento">0.00</span>
+        </div>
+        <div class="total-fila hidden" id="filaTotalConDescuento">
+          <span>TOTAL</span>
+          <span id="totalConDescuento">0.00</span>
         </div>
         <div class="total-fila">
           <span>IGV (18%)</span>
@@ -96,6 +126,7 @@
       </div>
     </div>
 
+    
     <!-- CARD: Datos adicionales -->
     <div class="card">
       <div class="card-header"><span>Datos adicionales</span></div>
