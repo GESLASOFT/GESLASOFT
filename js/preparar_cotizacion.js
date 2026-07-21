@@ -375,6 +375,8 @@ async function renderPdfDesdeDatos({
   const marginX = 14;
   const pageWidth = doc.internal.pageSize.getWidth();
   const contentWidth = pageWidth - marginX * 2;
+  const lineaColorTabla = 200; // mismo color de línea que usa autoTable (theme 'grid')
+  const lineaGrosorTabla = 0.1; // mismo grosor que usa autoTable
 
   const subtotal = precios.reduce((sum, p, idx) => sum + p * (itemsArr[idx].cantidad || 1), 0);
   const descuentoMonto = descuentoActivoDato ? subtotal * (descuentoPorcentajeDato / 100) : 0;
@@ -427,9 +429,11 @@ async function renderPdfDesdeDatos({
   }
 
   // ── BLOQUE CLIENTE ──
+  // ── BLOQUE CLIENTE ──
   let y = 40;
   const mitad = contentWidth / 2;
-  doc.setDrawColor(...gris400);
+  doc.setDrawColor(lineaColorTabla);
+  doc.setLineWidth(lineaGrosorTabla);
   doc.rect(marginX, y, contentWidth, 28);
   doc.line(marginX + mitad, y, marginX + mitad, y + 28);
 
@@ -465,6 +469,13 @@ async function renderPdfDesdeDatos({
   }
   pintarBloque(izq, marginX);
   pintarBloque(der, marginX + mitad);
+
+  // Redibujar el borde y la línea divisoria ENCIMA de los rellenos,
+  // para que no queden tapados por los fondos alternos.
+  doc.setDrawColor(lineaColorTabla);
+  doc.setLineWidth(lineaGrosorTabla);
+  doc.rect(marginX, y, contentWidth, 28);
+  doc.line(marginX + mitad, y, marginX + mitad, y + 28);
 
   // ── TABLA DE ÍTEMS ──
   y += 32;
@@ -508,8 +519,6 @@ async function renderPdfDesdeDatos({
   const anchoColumnaMonto = 24; // igual al cellWidth de "Sub Total" en la tabla de ítems
   const colSeparatorX = boxX + boxW - anchoColumnaMonto; // límite entre columna de etiqueta y columna de monto
   const totalesBoxStartY = yTot;
-  const lineaColorTabla = 200; // mismo color de línea que usa autoTable (theme 'grid')
-  const lineaGrosorTabla = 0.1; // mismo grosor que usa autoTable
 
   function filaTotal(label, valor, bg, blanco) {
     doc.setFillColor(...bg);
