@@ -64,7 +64,12 @@
       <input type="text" id="mapaFiltro" placeholder="Buscar laboratorio o método..." />
     </div>
     <div class="mapa-filtros-fila2">
-      <div class="tabs-acreditacion">
+      <div class="tabs-acreditacion" id="tabsTipoLab">
+        <button class="tab-btn tab-btn--active" data-tipo="todos">Todos</button>
+        <button class="tab-btn" data-tipo="ensayo">🧪 Ensayo</button>
+        <button class="tab-btn" data-tipo="calibracion">⚖️ Calibración</button>
+      </div>
+      <div class="tabs-acreditacion" id="tabsAcredMapa">
         <button class="tab-btn tab-btn--active" data-filtro="todos">Todos</button>
         <button class="tab-btn" data-filtro="acreditados">Acreditados</button>
         <button class="tab-btn" data-filtro="no_acreditados">No acreditados</button>

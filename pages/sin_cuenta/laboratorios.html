@@ -20,7 +20,7 @@
     </button>
 
     <div class="header-titles">
-      <span class="header-title">Laboratorios de Ensayo Acreditados</span>
+      <span class="header-title">Laboratorios Acreditados</span>
       <span class="header-sub">Directorio GESLASOFT</span>
     </div>
     <div class="vista-toggle">
@@ -49,7 +49,6 @@
       </a>
     </div>
   </header>
-  
 
   <main class="form-container">
 
@@ -65,14 +64,37 @@
         <span id="filtrosActivosCount" class="filtros-activos-badge hidden">0</span>
       </div>
 
-      <!-- ── PASO 1: BÚSQUEDA ── -->
-      <div class="acordeon-item" id="paso1">
-        <button type="button" class="acordeon-header" data-paso="paso1">
+      <!-- ── PASO 1: TIPO DE LABORATORIO ── -->
+      <div class="acordeon-item acordeon-item--open" id="paso1Tipo">
+        <button type="button" class="acordeon-header" data-paso="paso1Tipo">
           <span class="acordeon-titulo">
             <span class="step-badge">1</span>
+            Tipo de laboratorio
+          </span>
+          <span class="acordeon-indicador" id="indTipo"></span>
+          <svg class="acordeon-chevron" width="14" height="14" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="acordeon-body">
+          <div class="tabs-acreditacion" id="tabsTipoLab">
+            <button class="tab-btn tab-btn--active" data-tipo="todos">Todos</button>
+            <button class="tab-btn" data-tipo="ensayo">🧪 Ensayo</button>
+            <button class="tab-btn" data-tipo="calibracion">⚖️ Calibración</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PASO 2: BÚSQUEDA ── -->
+      <div class="acordeon-item" id="paso2">
+        <button type="button" class="acordeon-header" data-paso="paso2">
+          <span class="acordeon-titulo">
+            <span class="step-badge">2</span>
             Por nombre, código o descripción
           </span>
-          <span class="acordeon-indicador" id="ind1"></span>
+          <span class="acordeon-indicador" id="ind2"></span>
           <svg class="acordeon-chevron" width="14" height="14" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.5"
                stroke-linecap="round" stroke-linejoin="round">
@@ -96,14 +118,14 @@
         </div>
       </div>
 
-      <!-- ── PASO 2: UBICACIÓN ── -->
-      <div class="acordeon-item" id="paso2">
-        <button type="button" class="acordeon-header" data-paso="paso2">
+      <!-- ── PASO 3: UBICACIÓN ── -->
+      <div class="acordeon-item" id="paso3">
+        <button type="button" class="acordeon-header" data-paso="paso3">
           <span class="acordeon-titulo">
-            <span class="step-badge">2</span>
+            <span class="step-badge">3</span>
             Por ubicación
           </span>
-          <span class="acordeon-indicador" id="ind2"></span>
+          <span class="acordeon-indicador" id="ind3"></span>
           <svg class="acordeon-chevron" width="14" height="14" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.5"
                stroke-linecap="round" stroke-linejoin="round">
@@ -111,6 +133,12 @@
           </svg>
         </button>
         <div class="acordeon-body">
+          <div class="field">
+            <label for="filPais">País</label>
+            <select id="filPais">
+              <option value="">Todos los países</option>
+            </select>
+          </div>
           <div class="field">
             <label for="filDepartamento">Departamento</label>
             <select id="filDepartamento">
@@ -132,14 +160,14 @@
         </div>
       </div>
 
-      <!-- ── PASO 3: ACREDITACIÓN ── -->
-      <div class="acordeon-item" id="paso3">
-        <button type="button" class="acordeon-header" data-paso="paso3">
+      <!-- ── PASO 4: ACREDITACIÓN ── -->
+      <div class="acordeon-item" id="paso4">
+        <button type="button" class="acordeon-header" data-paso="paso4">
           <span class="acordeon-titulo">
-            <span class="step-badge">3</span>
+            <span class="step-badge">4</span>
             Por estado de acreditación
           </span>
-          <span class="acordeon-indicador" id="ind3"></span>
+          <span class="acordeon-indicador" id="ind4"></span>
           <svg class="acordeon-chevron" width="14" height="14" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.5"
                stroke-linecap="round" stroke-linejoin="round">
@@ -173,30 +201,35 @@
 
     </div>
 
-    <!-- RESULTADOS -->
-    <div id="resultadosHeader" class="resultados-header hidden">
-      <span id="resultadosCount">0 laboratorios encontrados</span>
-    </div>
+    <!-- COLUMNA DE RESULTADOS -->
+    <div class="resultados-col">
 
-    <!-- ESTADO: CARGANDO -->
-    <div id="estadoCargando" class="estado-cargando">
-      <div class="spinner"></div>
-      <p>Cargando laboratorios...</p>
-    </div>
+      <!-- RESULTADOS -->
+      <div id="resultadosHeader" class="resultados-header hidden">
+        <span id="resultadosCount">0 laboratorios encontrados</span>
+      </div>
 
-    <!-- ESTADO: SIN RESULTADOS -->
-    <div id="estadoVacio" class="estado-vacio hidden">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
-           stroke="var(--text-sub)" stroke-width="1.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <p>No se encontraron laboratorios<br>con esos criterios.</p>
-    </div>
+      <!-- ESTADO: CARGANDO -->
+      <div id="estadoCargando" class="estado-cargando">
+        <div class="spinner"></div>
+        <p>Cargando laboratorios...</p>
+      </div>
 
-    <!-- LISTA DE CARDS -->
-    <div id="listaLabs"></div>
+      <!-- ESTADO: SIN RESULTADOS -->
+      <div id="estadoVacio" class="estado-vacio hidden">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+             stroke="var(--text-sub)" stroke-width="1.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <p>No se encontraron laboratorios<br>con esos criterios.</p>
+      </div>
+
+      <!-- LISTA DE CARDS -->
+      <div id="listaLabs"></div>
+
+    </div>
 
   </main>
 
@@ -212,26 +245,29 @@
 
     // ── INDICADORES DE FILTRO ACTIVO ──
     function actualizarIndicadores() {
-      // Paso 1: búsqueda
+      // Paso 2: búsqueda
       const busq = document.getElementById('filBusqueda').value.trim();
-      const ind1 = document.getElementById('ind1');
-      ind1.textContent = busq ? '●' : '';
-      ind1.classList.toggle('hidden', !busq);
+      const ind2 = document.getElementById('ind2');
+      ind2.textContent = busq ? '●' : '';
+      ind2.classList.toggle('hidden', !busq);
 
-      // Paso 2: ubicación
+      // Paso 3: ubicación (país cuenta como activo solo si se cambió del default 'Perú')
+      const pais = document.getElementById('filPais').value;
       const dep  = document.getElementById('filDepartamento').value;
       const prov = document.getElementById('filProvincia').value;
       const dist = document.getElementById('filDistrito').value;
-      const ind2 = document.getElementById('ind2');
-      const ubicActiva = dep || prov || dist;
-      ind2.textContent = ubicActiva ? '●' : '';
-      ind2.classList.toggle('hidden', !ubicActiva);
-
-      // Paso 3: acreditación
-      const acredActiva = document.querySelector('.tab-btn--active')?.dataset.filtro !== 'todos';
       const ind3 = document.getElementById('ind3');
-      ind3.textContent = acredActiva ? '●' : '';
-      ind3.classList.toggle('hidden', !acredActiva);
+      const paisActiva = pais !== 'Perú';
+      const ubicActiva = paisActiva || dep || prov || dist;
+      ind3.textContent = ubicActiva ? '●' : '';
+      ind3.classList.toggle('hidden', !ubicActiva);
+
+      // Paso 4: acreditación
+      const acredBtn = document.querySelector('.tabs-acreditacion:not(#tabsTipoLab) .tab-btn--active');
+      const acredActiva = acredBtn?.dataset.filtro !== 'todos';
+      const ind4 = document.getElementById('ind4');
+      ind4.textContent = acredActiva ? '●' : '';
+      ind4.classList.toggle('hidden', !acredActiva);
 
       // Badge total
       const total = [busq, ubicActiva, acredActiva].filter(Boolean).length;
@@ -242,10 +278,11 @@
 
     // Escuchar cambios para actualizar indicadores
     document.getElementById('filBusqueda').addEventListener('input', actualizarIndicadores);
+    document.getElementById('filPais').addEventListener('change', actualizarIndicadores);
     document.getElementById('filDepartamento').addEventListener('change', actualizarIndicadores);
     document.getElementById('filProvincia').addEventListener('change', actualizarIndicadores);
     document.getElementById('filDistrito').addEventListener('change', actualizarIndicadores);
-    document.querySelectorAll('.tab-btn').forEach(b =>
+    document.querySelectorAll('.tabs-acreditacion:not(#tabsTipoLab) .tab-btn').forEach(b =>
       b.addEventListener('click', actualizarIndicadores)
     );
     document.getElementById('btnLimpiar').addEventListener('click', actualizarIndicadores);
