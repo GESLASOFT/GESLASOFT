@@ -3,21 +3,22 @@ const SUPABASE_URL  = 'https://aahisaouszyvcqhgzssx.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhaGlzYW91c3p5dmNxaGd6c3N4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4Njg3NjgsImV4cCI6MjA5MjQ0NDc2OH0.6oJ9SSIX8C7DkFmhgZ3p-YZYHYu-eF9S3wlzAqmKFqY';
 
 // ── ESTADO ──
-let todosLosLabs  = [];
-let marcadores    = [];
-let mapa          = null;
-let filtroTexto   = '';
-let filtroAcred   = 'todos';
+let todosLosLabs    = [];
+let marcadores      = [];
+let mapa            = null;
+let filtroTexto     = '';
+let filtroAcred     = 'todos';
+let filtroTipoLab   = 'todos'; // 'todos' | 'ensayo' | 'calibracion'
 let marcadorUsuario = null;
 let circuloUsuario  = null;
 
 // ── DOM ──
-const inputFiltro = document.getElementById('mapaFiltro');
-const mapaCount   = document.getElementById('mapaCount');
-const mapaCountTx = document.getElementById('mapaCountText');
-const panelDet    = document.getElementById('panelDetalle');
-const panelCont   = document.getElementById('panelContenido');
-const btnCerrar   = document.getElementById('btnCerrarPanel');
+const inputFiltro  = document.getElementById('mapaFiltro');
+const mapaCount    = document.getElementById('mapaCount');
+const mapaCountTx  = document.getElementById('mapaCountText');
+const panelDet     = document.getElementById('panelDetalle');
+const panelCont    = document.getElementById('panelContenido');
+const btnCerrar    = document.getElementById('btnCerrarPanel');
 const btnCercaDeMi = document.getElementById('btnCercaDeMi');
 
 // ── FETCH ──
@@ -42,7 +43,7 @@ async function init() {
   iniciarMapa();
   try {
     todosLosLabs = await fetchLabs();
-    renderMarcadores(todosLosLabs);
+    aplicarFiltros();
   } catch (e) {
     console.error('Error al cargar laboratorios:', e);
   }
@@ -115,19 +116,13 @@ function formatDistancia(km) {
 function desactivarCercaDeMi() {
   if (marcadorUsuario) { mapa.removeLayer(marcadorUsuario); marcadorUsuario = null; }
   if (circuloUsuario)  { mapa.removeLayer(circuloUsuario);  circuloUsuario  = null; }
-
-  // Limpiar distancias
   todosLosLabs.forEach(l => delete l._distKm);
-
   btnCercaDeMi.classList.remove('btn-cercademi--activo');
-
-  // Volver a renderizar sin distancias
   aplicarFiltros();
 }
 
 // ── BOTÓN CERCA DE MÍ ──
 btnCercaDeMi.addEventListener('click', () => {
-  // Toggle: si ya está activo, desactivar
   if (btnCercaDeMi.classList.contains('btn-cercademi--activo')) {
     desactivarCercaDeMi();
     return;
@@ -145,17 +140,15 @@ btnCercaDeMi.addEventListener('click', () => {
     (pos) => {
       const { latitude: lat, longitude: lng } = pos.coords;
 
-      // Quitar marcador anterior del usuario
       if (marcadorUsuario) mapa.removeLayer(marcadorUsuario);
       if (circuloUsuario)  mapa.removeLayer(circuloUsuario);
 
-      // Marcar ubicación del usuario
       marcadorUsuario = L.marker([lat, lng], { icon: crearIconoUsuario() })
         .bindPopup('<div class="popup-nombre">📍 Tu ubicación</div>')
         .addTo(mapa);
 
       circuloUsuario = L.circle([lat, lng], {
-        radius: 30000,   // 30 km de radio visual
+        radius: 30000,
         color: '#1565C0',
         fillColor: '#1565C0',
         fillOpacity: 0.05,
@@ -163,7 +156,6 @@ btnCercaDeMi.addEventListener('click', () => {
         dashArray: '6 4',
       }).addTo(mapa);
 
-      // Calcular distancia a cada lab y ordenar
       const labsConDist = todosLosLabs
         .filter(l => l.latitud && l.longitud)
         .map(l => ({
@@ -172,7 +164,6 @@ btnCercaDeMi.addEventListener('click', () => {
         }))
         .sort((a, b) => a._distKm - b._distKm);
 
-      // Guardar distancias en todosLosLabs para usarlas en el panel
       labsConDist.forEach(l => {
         const orig = todosLosLabs.find(x => x.id === l.id);
         if (orig) orig._distKm = l._distKm;
@@ -180,13 +171,11 @@ btnCercaDeMi.addEventListener('click', () => {
 
       renderMarcadores(labsConDist, true);
 
-      // Mostrar contador con el más cercano
       if (labsConDist.length > 0) {
         const mas = labsConDist[0];
         mapaCountTx.textContent = `Más cercano: ${mas.nombre} — ${formatDistancia(mas._distKm)}`;
       }
 
-      // Centrar mapa entre usuario y labs cercanos
       const bounds = L.latLngBounds([[lat, lng]]);
       labsConDist.slice(0, 5).forEach(l => bounds.extend([l.latitud, l.longitud]));
       mapa.fitBounds(bounds.pad(0.3));
@@ -216,7 +205,7 @@ function renderMarcadores(labs, conDistancia = false) {
   const conCoordenadas = labs.filter(l => l.latitud && l.longitud);
 
   conCoordenadas.forEach(lab => {
-    const icono   = crearIcono(lab.acreditado);
+    const icono    = crearIcono(lab.acreditado);
     const marcador = L.marker([lab.latitud, lab.longitud], { icon: icono });
 
     const distTag = conDistancia && lab._distKm != null
@@ -256,23 +245,48 @@ function renderMarcadores(labs, conDistancia = false) {
   mapaCount.classList.remove('hidden');
 }
 
+// ── HELPER: arma UNA sección (ensayo o calibración), igual que en laboratorios.js ──
+function armarSeccion(lab, tipo) {
+  const esCalibracion = tipo === 'calibracion';
+  const items = esCalibracion ? (lab.alcance_calibracion || []) : (lab.metodos_acreditados || []);
+  const count = items.length;
+  if (count === 0) return null;
+
+  const codigoLab = esCalibracion ? (lab.codigo_calibracion || lab.codigo) : lab.codigo;
+  const etiqueta  = esCalibracion ? 'Calibración' : 'Ensayo';
+
+  const btnLabel = esCalibracion
+    ? `${count} alcance${count !== 1 ? 's' : ''} de calibración`
+    : `${count} método${count !== 1 ? 's' : ''} acreditado${count !== 1 ? 's' : ''}`;
+
+  const filasHtml = esCalibracion
+    ? items.map(a => `
+        <tr>
+          <td class="panel-metodo-codigo">${a.magnitud || ''}</td>
+          <td class="panel-metodo-desc">${a.instrumento || ''}<br><span style="opacity:.65;font-size:12px">${a.alcance || ''}</span></td>
+        </tr>`).join('')
+    : items.map(m => `
+        <tr>
+          <td class="panel-metodo-codigo">${m.codigo || ''}</td>
+          <td class="panel-metodo-desc">${m.descripcion || ''}</td>
+        </tr>`).join('');
+
+  return { tipo, etiqueta, codigoLab, count, btnLabel, filasHtml };
+}
+
 // ── ABRIR PANEL DE DETALLE ──
 window.abrirPanel = function(id) {
-  const lab   = todosLosLabs.find(l => l.id === id);
+  const lab = todosLosLabs.find(l => l.id === id);
   if (!lab) return;
 
-  const metodos = lab.metodos_acreditados || [];
-  const count   = metodos.length;
-
-  const filasHtml = metodos.map(m => `
-    <tr>
-      <td class="panel-metodo-codigo">${m.codigo || ''}</td>
-      <td class="panel-metodo-desc">${m.descripcion || ''}</td>
-    </tr>`).join('');
-
-  const btnLabel = count === 0
-    ? 'Sin métodos registrados'
-    : `${count} método${count !== 1 ? 's' : ''} acreditado${count !== 1 ? 's' : ''}`;
+  let secciones = [];
+  if (filtroTipoLab === 'ensayo') {
+    secciones = [armarSeccion(lab, 'ensayo')].filter(Boolean);
+  } else if (filtroTipoLab === 'calibracion') {
+    secciones = [armarSeccion(lab, 'calibracion')].filter(Boolean);
+  } else {
+    secciones = [armarSeccion(lab, 'ensayo'), armarSeccion(lab, 'calibracion')].filter(Boolean);
+  }
 
   const gmapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lab.latitud},${lab.longitud}`;
   const wazeUrl  = `https://waze.com/ul?ll=${lab.latitud},${lab.longitud}&navigate=yes`;
@@ -280,6 +294,43 @@ window.abrirPanel = function(id) {
   const distHtml = lab._distKm != null
     ? `<div class="panel-dist">📍 ${formatDistancia(lab._distKm)} de tu ubicación</div>`
     : '';
+
+  const seccionesHtml = secciones.length === 0
+    ? `
+    <button type="button" class="panel-metodos-btn panel-metodos-btn--empty" disabled>
+      <span class="panel-metodos-label">Sin datos registrados</span>
+    </button>`
+    : secciones.map((sec, si) => `
+    <div class="seccion-servicio" data-seccion-idx="${si}">
+      ${secciones.length > 1 || sec.codigoLab ? `
+      <div class="seccion-servicio-titulo">
+        ${sec.etiqueta}${sec.codigoLab ? ` · ${sec.codigoLab}` : ''}
+      </div>` : ''}
+      <button type="button" class="panel-metodos-btn" data-sec="${si}">
+        <span class="panel-metodos-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="1"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="13" y2="16"/>
+          </svg>
+          ${sec.btnLabel}
+        </span>
+        <svg class="panel-metodos-chevron" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      <div class="panel-metodos-panel">
+        <table class="panel-metodos-tabla">
+          <tbody>${sec.filasHtml}</tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
 
   panelCont.innerHTML = `
     <div class="panel-nombre">${lab.nombre}</div>
@@ -301,32 +352,7 @@ window.abrirPanel = function(id) {
         : '<span class="lab-badge-no-acreditado">✗ NO ACREDITADO</span>'}
     </div>
 
-    <button type="button" class="panel-metodos-btn ${count === 0 ? 'panel-metodos-btn--empty' : ''}" id="panelBtnMet">
-      <span class="panel-metodos-label">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2.5"
-             stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-          <rect x="9" y="3" width="6" height="4" rx="1"/>
-          <line x1="9" y1="12" x2="15" y2="12"/>
-          <line x1="9" y1="16" x2="13" y2="16"/>
-        </svg>
-        ${btnLabel}
-      </span>
-      ${count > 0 ? `
-      <svg class="panel-metodos-chevron" width="14" height="14" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6 9 12 15 18 9"/>
-      </svg>` : ''}
-    </button>
-
-    ${count > 0 ? `
-    <div class="panel-metodos-panel" id="panelMetPanel">
-      <table class="panel-metodos-tabla">
-        <tbody>${filasHtml}</tbody>
-      </table>
-    </div>` : ''}
+    ${seccionesHtml}
 
     <div class="panel-acciones">
       <a href="${gmapsUrl}" target="_blank" class="btn-llegar">
@@ -361,14 +387,17 @@ window.abrirPanel = function(id) {
 
   panelDet.classList.remove('hidden');
 
-  const btnMet   = document.getElementById('panelBtnMet');
-  const metPanel = document.getElementById('panelMetPanel');
-  if (btnMet && metPanel) {
-    btnMet.addEventListener('click', () => {
-      const abierto = metPanel.classList.toggle('panel-metodos-panel--open');
-      btnMet.classList.toggle('panel-metodos-btn--open', abierto);
-    });
-  }
+  // ── TOGGLE COLAPSABLE (uno por cada sección) ──
+  panelCont.querySelectorAll('.seccion-servicio').forEach(seccionEl => {
+    const btnMet   = seccionEl.querySelector('.panel-metodos-btn');
+    const metPanel = seccionEl.querySelector('.panel-metodos-panel');
+    if (btnMet && metPanel) {
+      btnMet.addEventListener('click', () => {
+        const abierto = metPanel.classList.toggle('panel-metodos-panel--open');
+        btnMet.classList.toggle('panel-metodos-btn--open', abierto);
+      });
+    }
+  });
 
   if (lab.latitud && lab.longitud) {
     mapa.setView([lab.latitud, lab.longitud], 14);
@@ -393,7 +422,29 @@ btnCerrar.addEventListener('click', () => {
   panelDet.classList.add('hidden');
 });
 
-// ── FILTROS ──
+// ── TABS TIPO DE LABORATORIO ──
+document.querySelectorAll('#tabsTipoLab .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#tabsTipoLab .tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+    btn.classList.add('tab-btn--active');
+    filtroTipoLab = btn.dataset.tipo;
+    inputFiltro.value = '';
+    filtroTexto = '';
+    aplicarFiltros();
+  });
+});
+
+// ── TABS ACREDITACIÓN ──
+document.querySelectorAll('#tabsAcredMapa .tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#tabsAcredMapa .tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+    btn.classList.add('tab-btn--active');
+    filtroAcred = btn.dataset.filtro;
+    aplicarFiltros();
+  });
+});
+
+// ── FILTROS TEXTO ──
 let filtroTimer;
 inputFiltro.addEventListener('input', () => {
   clearTimeout(filtroTimer);
@@ -403,32 +454,38 @@ inputFiltro.addEventListener('input', () => {
   }, 300);
 });
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
-    btn.classList.add('tab-btn--active');
-    filtroAcred = btn.dataset.filtro;
-    aplicarFiltros();
-  });
-});
-
+// ── APLICAR FILTROS ──
 function aplicarFiltros() {
   let resultado = todosLosLabs;
 
+  // Filtro tipo de laboratorio
+  if (filtroTipoLab === 'ensayo') {
+    resultado = resultado.filter(l => l.ofrece_ensayo);
+  } else if (filtroTipoLab === 'calibracion') {
+    resultado = resultado.filter(l => l.ofrece_calibracion);
+  }
+
+  // Filtro búsqueda (nombre + métodos/alcances según tipo activo)
   if (filtroTexto) {
     resultado = resultado.filter(l => {
-      const nombre  = l.nombre.toLowerCase();
-      const metodos = (l.metodos_acreditados || []).some(m =>
-        `${m.codigo || ''} ${m.descripcion || ''}`.toLowerCase().includes(filtroTexto)
-      );
-      return nombre.includes(filtroTexto) || metodos;
+      const nombreMatch = (l.nombre || '').toLowerCase().includes(filtroTexto);
+
+      const metodos  = l.metodos_acreditados || [];
+      const alcances = l.alcance_calibracion || [];
+
+      const matchEnsayo = (filtroTipoLab === 'ensayo' || filtroTipoLab === 'todos') &&
+        metodos.some(m => `${m.codigo || ''} ${m.descripcion || ''}`.toLowerCase().includes(filtroTexto));
+
+      const matchCalibracion = (filtroTipoLab === 'calibracion' || filtroTipoLab === 'todos') &&
+        alcances.some(a => `${a.magnitud || ''} ${a.instrumento || ''}`.toLowerCase().includes(filtroTexto));
+
+      return nombreMatch || matchEnsayo || matchCalibracion;
     });
   }
 
   if (filtroAcred === 'acreditados')    resultado = resultado.filter(l => l.acreditado === true);
   if (filtroAcred === 'no_acreditados') resultado = resultado.filter(l => l.acreditado === false);
 
-  // Resetear estado cerca de mí al filtrar
   btnCercaDeMi.classList.remove('btn-cercademi--activo');
 
   renderMarcadores(resultado);
