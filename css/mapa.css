@@ -410,3 +410,96 @@
     color: var(--accent) !important;
   }
 }
+
+/* ══════════════════════════════════════════
+   SECCIONES DE SERVICIO (Ensayo / Calibración)
+   en el panel de detalle del mapa
+   ══════════════════════════════════════════ */
+
+.seccion-servicio {
+  margin-bottom: 10px;
+}
+.seccion-servicio:last-child {
+  margin-bottom: 0;
+}
+
+.seccion-servicio-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-sub);
+  padding: 0 2px 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.seccion-servicio + .seccion-servicio {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+}
+
+.panel-metodos-btn--empty {
+  cursor: default;
+  opacity: .6;
+  margin-bottom: 14px;
+}
+.panel-metodos-btn--empty:hover {
+  border-color: var(--border);
+  background: var(--bg-subtle);
+}
+
+/* ── BADGES DE ESTADO (usados en el panel del mapa) ── */
+.lab-badge-acreditado {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid rgba(0,137,123,.2);
+  border-radius: 20px;
+  padding: 3px 8px;
+}
+.lab-badge-no-acreditado {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-sub);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 8px;
+}
+
+/* ── BOTÓN "SOLICITAR COTIZACIÓN" en el panel del mapa ── */
+.btn-cotizar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .15s, box-shadow .15s;
+  box-shadow: 0 2px 6px rgba(0,137,123,.2);
+}
+.btn-cotizar:hover {
+  background: var(--accent-mid);
+  box-shadow: 0 4px 10px rgba(0,137,123,.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .seccion-servicio-titulo,
+  .seccion-servicio + .seccion-servicio {
+    border-color: rgba(79, 195, 247, 0.18);
+  }
+}

@@ -417,3 +417,79 @@ select:disabled {
   border: 1px solid rgba(148, 163, 184, 0.3);
   /* ajusta según el resto de tus badges */
 }
+
+/* ── SECCIONES DE SERVICIO (Ensayo / Calibración) ── */
+
+.seccion-servicio {
+  margin-bottom: 10px;
+}
+
+.seccion-servicio:last-child {
+  margin-bottom: 0;
+}
+
+.seccion-servicio-titulo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-sub, #6b7280);
+  padding: 0 2px 6px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+  margin-bottom: 8px;
+}
+
+/* Cuando hay dos secciones apiladas, separarlas visualmente con un poco más de aire */
+.seccion-servicio + .seccion-servicio {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border, #e5e7eb);
+}
+
+/* ══════════════════════════════════════════
+   LAYOUT 2 COLUMNAS (≥700px)
+   ══════════════════════════════════════════ */
+/* 700px–1050px: columnas fluidas, proporción 1:2 (filtros : lista) */
+@media (min-width: 700px) {
+  .form-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    align-items: start;
+    gap: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .form-container > .card {
+    grid-column: 1;
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    border-radius: 0;
+    margin: 0;
+  }
+
+  .resultados-col {
+    grid-column: 2;
+    padding: 16px;
+  }
+}
+
+/* ≥1050px: columnas fijas (350px / 700px), centradas con espacio a los costados */
+@media (min-width: 1050px) {
+  .form-container {
+    grid-template-columns: 350px 700px;
+    justify-content: center;
+  }
+
+  .form-container > .card {
+    width: 350px;
+  }
+
+  .resultados-col {
+    width: 700px;
+  }
+}
