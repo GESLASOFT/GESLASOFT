@@ -266,18 +266,50 @@ function aplicarFiltros() {
   renderCards(resultado);
 }
 
-// ── OBTENER ESTADO (BADGE) ──
+// ── OBTENER ESTADO ──
 function obtenerEstadoBadge(lab) {
   return lab.estado || 'sin_estado';
 }
 
-const ESTADO_CONFIG = {
-  acreditado:    { label: '✓ ACREDITADO',    cls: 'lab-badge-acreditado'    },
-  no_acreditado: { label: '✗ NO ACREDITADO', cls: 'lab-badge-no-acreditado' },
-  suspendido:    { label: '⏸ SUSPENDIDO',    cls: 'lab-badge-suspendido'    },
-  en_proceso:    { label: '⏳ EN PROCESO',    cls: 'lab-badge-en-proceso'    },
-  sin_estado:    { label: 'SIN ESTADO',      cls: 'lab-badge-sin-estado'    },
+// Texto legible para estados simples (dos líneas, sin guion)
+const ESTADO_TEXTO = {
+  no_acreditado: 'no acreditado',
+  suspendido:    'suspendido',
+  sin_estado:    'sin estado',
 };
+
+// ── TIPO DE SERVICIO EN TEXTO ("de ensayo" / "de calibración" / "de ensayo y calibración") ──
+function tipoServicioTexto(lab) {
+  if (lab.ofrece_ensayo && lab.ofrece_calibracion) return 'de ensayo y calibración';
+  if (lab.ofrece_calibracion) return 'de calibración';
+  return 'de ensayo';
+}
+
+// ── ARMAR LA ORACIÓN DINÁMICA DE ESTADO/ACREDITACIÓN ──
+// Devuelve HTML (puede incluir <br> para los estados de dos líneas)
+function armarOracionEstado(lab) {
+  const tipo   = tipoServicioTexto(lab);
+  const estado = obtenerEstadoBadge(lab);
+
+  if (estado === 'acreditado') {
+    const entidad   = lab.entidad_acreditadora || 'INACAL';
+    const norma     = lab.norma_acreditacion || '';
+    const normaTxt  = norma ? ` con la ${norma}` : '';
+    const codigoTxt = lab.codigo ? `, código de registro ${lab.codigo}` : '';
+    return `Laboratorio ${tipo} acreditado por ${entidad}${normaTxt}${codigoTxt}`;
+  }
+
+  if (estado === 'en_proceso') {
+    const entidad  = lab.entidad_acreditadora || 'INACAL';
+    const norma    = lab.norma_acreditacion || '';
+    const normaTxt = norma ? ` con la ${norma}` : '';
+    return `Laboratorio ${tipo} en proceso de acreditación ante ${entidad}${normaTxt}`;
+  }
+
+  // Estados simples: dos líneas, sin guion
+  const estadoTxt = ESTADO_TEXTO[estado] || 'sin estado';
+  return `Laboratorio ${tipo}<br>${estadoTxt}`;
+}
 
 // ── RENDER CARDS ──
 function renderCards(labs) {
@@ -300,7 +332,6 @@ function armarSeccion(lab, tipo) {
   const count = items.length;
   if (count === 0) return null;
 
-  const codigoLab = esCalibracion ? (lab.codigo_calibracion || lab.codigo) : lab.codigo;
   const etiqueta  = esCalibracion ? 'Calibración' : 'Ensayo';
 
   const btnLabel = esCalibracion
@@ -327,7 +358,7 @@ function armarSeccion(lab, tipo) {
           </tr>`;
       }).join('');
 
-  return { tipo, etiqueta, codigoLab, count, btnLabel, filasHtml };
+  return { tipo, etiqueta, count, btnLabel, filasHtml };
 }
 
 // ── CREAR CARD ──
@@ -341,9 +372,8 @@ function crearCard(lab, idx) {
     secciones = [armarSeccion(lab, 'ensayo'), armarSeccion(lab, 'calibracion')].filter(Boolean);
   }
 
-  const estado    = obtenerEstadoBadge(lab);
-  const cfg       = ESTADO_CONFIG[estado] || ESTADO_CONFIG['sin_estado'];
-  const badgeHtml = `<span class="${cfg.cls}">${cfg.label}</span>`;
+  const estado = obtenerEstadoBadge(lab);
+  const oracionHtml = `<span class="lab-estado-texto ${estado === 'acreditado' ? 'lab-estado-texto--acreditado' : 'lab-estado-texto--otro'}">${armarOracionEstado(lab)}</span>`;
 
   const card = document.createElement('div');
   card.className = 'lab-card';
@@ -356,9 +386,9 @@ function crearCard(lab, idx) {
       </button>`
     : secciones.map((sec, si) => `
       <div class="seccion-servicio" data-seccion-idx="${si}">
-        ${secciones.length > 1 || sec.codigoLab ? `
+        ${secciones.length > 1 ? `
         <div class="seccion-servicio-titulo">
-          ${sec.etiqueta}${sec.codigoLab ? ` · ${sec.codigoLab}` : ''}
+          ${sec.etiqueta}
         </div>` : ''}
         <button type="button" class="btn-metodos" data-sec="${si}">
           <span class="btn-metodos-label">
@@ -437,7 +467,9 @@ function crearCard(lab, idx) {
         </div>
         ${lab.direccion ? `<div class="lab-card-location" style="margin-top:2px">${lab.direccion}</div>` : ''}
       </div>
-      ${badgeHtml}
+      <div class="lab-card-estado-col">
+        ${oracionHtml}
+      </div>
     </div>
 
     <div class="lab-card-body">

@@ -264,64 +264,6 @@ select:disabled {
   vertical-align: middle;
 }
 
-/* ── BADGES DE ESTADO ── */
-
-.lab-badge-acreditado {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--accent);
-  background: var(--accent-light);
-  border: 1px solid rgba(0,137,123,.2);
-  border-radius: 20px;
-  padding: 3px 8px;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.lab-badge-no-acreditado {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--text-sub);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 3px 8px;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.lab-badge-suspendido {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--warning);
-  background: var(--warning-light);
-  border: 1px solid rgba(245,158,11,.3);
-  border-radius: 20px;
-  padding: 3px 8px;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
-.lab-badge-en-proceso {
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--blue);
-  background: var(--blue-light);
-  border: 1px solid rgba(21,101,192,.2);
-  border-radius: 20px;
-  padding: 3px 8px;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-}
-
 /* ══════════════════════════════════════════
    ACORDEÓN DE FILTROS
    ══════════════════════════════════════════ */
@@ -409,15 +351,6 @@ select:disabled {
   color: var(--text);
 }
 
-
-
-.lab-badge-sin-estado {
-  background: rgba(148, 163, 184, 0.15);
-  color: #94a3b8;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  /* ajusta según el resto de tus badges */
-}
-
 /* ── SECCIONES DE SERVICIO (Ensayo / Calibración) ── */
 
 .seccion-servicio {
@@ -492,4 +425,30 @@ select:disabled {
   .resultados-col {
     width: 700px;
   }
+}
+
+/* ── COLUMNA DE ESTADO/ACREDITACIÓN (oración dinámica) ── */
+.lab-card-estado-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 5px;
+  flex-shrink: 0;
+  max-width: 130px;
+}
+
+.lab-estado-texto {
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: right;
+  font-weight: 600;
+}
+
+.lab-estado-texto--acreditado {
+  color: var(--text-sub);
+}
+
+.lab-estado-texto--otro {
+  color: var(--text-sub);
 }
